@@ -4,14 +4,28 @@ import shipImage from "../assets/ship.jpg";
 import logo from "../assets/nirmon-logo.png";
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // Toggle visibility state
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState(""); // Error state for email
   const navigate = useNavigate();
+
+  // Simple Email Validation Regex
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Validation Check
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+
     handleAuth("login");
   };
 
@@ -51,22 +65,36 @@ const Login: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           
-          {/* USERNAME */}
+          {/* EMAIL INPUT */}
           <div className="mb-6">
             <label className="block text-sm font-bold mb-2 tracking-wide">
-              USERNAME
+              EMAIL
             </label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError(""); // Clear error on typing
+              }}
               disabled={isLoading}
-              className="w-full px-6 py-3 rounded-full bg-white/90 text-black focus:outline-none focus:ring-2 focus:ring-cyan-400 transition shadow-inner font-normal disabled:opacity-70"
+              className={`w-full px-6 py-3 rounded-full bg-white/90 text-black focus:outline-none focus:ring-2 transition shadow-inner font-normal disabled:opacity-70 ${
+                emailError 
+                  ? "border-2 border-red-500 focus:ring-red-500" 
+                  : "focus:ring-cyan-400"
+              }`}
+              placeholder="name@company.com"
               required={!isLoading}
             />
+            {/* Validation Message */}
+            {emailError && (
+              <p className="text-red-400 text-xs mt-2 ml-4 font-medium tracking-wide">
+                {emailError}
+              </p>
+            )}
           </div>
 
-          {/* PASSWORD */}
+          {/* PASSWORD INPUT */}
           <div className="mb-10 relative">
             <label className="block text-sm font-bold mb-2 tracking-wide">
               PASSWORD
@@ -77,11 +105,10 @@ const Login: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-6 py-3 rounded-full bg-white/90 text-black focus:outline-none focus:ring-2 focus:ring-cyan-400 transition shadow-inner font-normal disabled:opacity-70 pr-12" // Added pr-12 for icon space
+                className="w-full px-6 py-3 rounded-full bg-white/90 text-black focus:outline-none focus:ring-2 focus:ring-cyan-400 transition shadow-inner font-normal disabled:opacity-70 pr-12"
                 required={!isLoading}
               />
               
-              {/* Show/Hide Toggle Icon */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -89,12 +116,10 @@ const Login: React.FC = () => {
                 disabled={isLoading}
               >
                 {showPassword ? (
-                  // Eye Slash Icon (Hide)
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                   </svg>
                 ) : (
-                  // Eye Icon (Show)
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
