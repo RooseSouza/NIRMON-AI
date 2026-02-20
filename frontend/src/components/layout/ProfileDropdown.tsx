@@ -6,6 +6,18 @@ const ProfileDropdown = () => {
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Read role from Local Storage
+  const userRole = localStorage.getItem("userRole");
+  const isViewer = userRole === "viewer";
+
+  const displayName = isViewer ? "VIEWER" : "USER NAME";
+  const displayRole = isViewer ? "VIEWER" : "USER ROLE";
+
+  const handleLogout = () => {
+    localStorage.removeItem("userRole"); // Clear role on logout
+    navigate("/");
+  };
+
   // Close dropdown if clicked outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -34,13 +46,17 @@ const ProfileDropdown = () => {
           </svg>
         </div>
         
-        {/* Text Info */}
+        {/* Text Info - Dynamic based on role */}
         <div className="text-left text-white">
-          <div className="text-sm font-bold tracking-wide uppercase leading-tight group-hover:text-cyan-200 transition-colors">User Name</div>
-          <div className="text-[10px] text-gray-300 font-medium tracking-wider uppercase">User Role</div>
+          <div className="text-sm font-bold tracking-wide uppercase leading-tight group-hover:text-cyan-200 transition-colors">
+            {displayName}
+          </div>
+          <div className="text-[10px] text-gray-300 font-medium tracking-wider uppercase">
+            {displayRole}
+          </div>
         </div>
 
-        {/* Dropdown Arrow with Rotation Animation */}
+        {/* Dropdown Arrow */}
         <svg 
           className={`w-4 h-4 text-gray-300 transition-transform duration-300 ease-in-out ${open ? 'rotate-180 text-cyan-200' : 'rotate-0'}`} 
           fill="none" 
@@ -51,14 +67,14 @@ const ProfileDropdown = () => {
         </svg>
       </button>
 
-      {/* Animated Dropdown Menu */}
+      {/* Dropdown Menu */}
       <div 
         className={`absolute right-0 mt-4 w-48 origin-top-right transform transition-all duration-300 ease-out
           ${open ? 'opacity-100 scale-100 translate-y-0 visible' : 'opacity-0 scale-95 -translate-y-2 invisible'}
         `}
       >
         <button
-          onClick={() => navigate("/")}
+          onClick={handleLogout} // Use the new logout handler
           className="w-full flex items-center justify-between bg-[#cc0000] hover:bg-[#b30000] text-white px-6 py-3 rounded-xl shadow-xl transition-all hover:scale-105 active:scale-95 group"
         >
           <span className="font-semibold tracking-wide">LOGOUT</span>
