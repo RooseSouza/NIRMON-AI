@@ -12,6 +12,27 @@ class User(db.Model):
     password_hash = db.Column(db.Text, nullable=False)
     status = db.Column(db.Boolean, default=True)
 
+class Module(db.Model):
+    __tablename__ = "module"
+
+    module_id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    module_name = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.Boolean, default=True)
+
+class RoleAccess(db.Model):
+    __tablename__ = "role_access"
+
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    module_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey("module.module_id"))
+    role_id = db.Column(db.UUID(as_uuid=True))
+
+    view_flag = db.Column(db.Boolean, default=False)
+    add_flag = db.Column(db.Boolean, default=False)
+    edit_flag = db.Column(db.Boolean, default=False)
+    delete_flag = db.Column(db.Boolean, default=False)
+    approve_flag = db.Column(db.Boolean, default=False)
+
 class Role(db.Model):
     __tablename__ = "roles"
 
