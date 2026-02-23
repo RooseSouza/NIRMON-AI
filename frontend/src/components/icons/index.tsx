@@ -1,4 +1,5 @@
 import React from "react";
+import "react-datepicker/dist/react-datepicker.css";
 
 // Generic Icon Wrapper
 const Icon: React.FC<{ className?: string; children: React.ReactNode }> = ({
