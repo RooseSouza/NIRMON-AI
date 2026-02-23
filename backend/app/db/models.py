@@ -33,4 +33,10 @@ class RoleAccess(db.Model):
     delete_flag = db.Column(db.Boolean, default=False)
     approve_flag = db.Column(db.Boolean, default=False)
 
+class Role(db.Model):
+    __tablename__ = "roles"
+
+    role_id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    role_name = db.Column(db.Text, unique=True, nullable=False)
+    description = db.Column(db.Text, nullable=True)
     status = db.Column(db.Boolean, default=True)
