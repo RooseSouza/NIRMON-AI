@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import shipImage from "../assets/ship.jpg";
+import shipImage from "../assets/banner.mp4";
 import logo from "../assets/nirmon-logo.png";
 
 export default function Login() {
@@ -8,23 +8,53 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(""); // State for API errors
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate Login Logic
-    setTimeout(() => {
-      localStorage.setItem("userRole", "user");
-      navigate("/dashboard");
-    }, 1000);
-  };
+    setError(""); 
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // STORE DATA
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.user_id);
+        localStorage.setItem("userName", data.name);
+        
+        // Save the Role Name specifically for display
+        localStorage.setItem("userRoleName", data.role_name); 
+        
+        // Save role_id if you need it for logic checks
+        localStorage.setItem("userRoleId", data.role_id);
+
+        navigate("/dashboard");
+      } else {
+        setError(data.message || "Invalid credentials");
+      }
+    } catch (err) {
+      console.error("Login Error:", err);
+      setError("Unable to connect to server.");
+    } finally {
+      setIsLoading(false);
+    }
+};
 
   const handleViewerLogin = () => {
     setIsLoading(true);
+    // Viewer is still a simulation/bypass
     setTimeout(() => {
       localStorage.setItem("userRole", "viewer");
+      localStorage.setItem("userName", "Guest Viewer");
       navigate("/dashboard");
     }, 1000);
   };
@@ -103,6 +133,16 @@ export default function Login() {
             </div>
           </div>
 
+          {/* Error Message Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {error}
+            </div>
+          )}
+
           {/* Buttons */}
           <div className="pt-2 space-y-4">
             <button
@@ -141,13 +181,15 @@ export default function Login() {
         </p>
       </div>
 
-      {/* RIGHT SIDE - IMAGE */}
+      {/* RIGHT SIDE - VIDEO */}
       <div className="hidden lg:block lg:w-1/2 relative">
         <div className="absolute inset-0 bg-blue-900/20 mix-blend-multiply z-10"></div>
-        <img
+        <video
           src={shipImage}
-          alt="Ship Design"
           className="absolute inset-0 w-full h-full object-cover"
+          autoPlay
+          muted
+          loop
         />
         
         {/* Optional Overlay Text on Image */}
@@ -163,4 +205,4 @@ export default function Login() {
 
     </div>
   );
-}   
+}
