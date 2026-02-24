@@ -31,7 +31,19 @@ const AppSidebar: React.FC = () => {
   }, []);
 
   const isActive = useCallback(
-    (path: string) => location.pathname === path,
+    (path: string) => {
+      // Dashboard exact match
+      if (path === "/dashboard") {
+        return location.pathname === "/dashboard";
+      }
+
+      // Projects & all sub routes
+      if (path === "/projects") {
+        return location.pathname.startsWith("/projects");
+      }
+
+      return false;
+    },
     [location.pathname]
   );
 
@@ -78,7 +90,7 @@ const AppSidebar: React.FC = () => {
           <img
             src={logo}
             alt="Nirmon Logo"
-            className={`object-contain ${
+            className={`object-contain transition-all duration-300 ${
               isExpanded || isHovered || isMobileOpen
                 ? "h-10 w-auto"
                 : "h-8 w-8"

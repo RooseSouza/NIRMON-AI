@@ -1,66 +1,106 @@
-import React from 'react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Search } from "lucide-react";
 
-const Projects = () => {
+const Projects: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
-    <div className="h-full flex flex-col font-genos">
-      
-      {/* Header Section */}
-      <div className="flex justify-between items-end mb-8 border-b border-gray-500/30 pb-4">
-        
-        {/* Title */}
+    <div className="w-full h-full flex flex-col px-8 py-8">
+
+      {/* ================= HEADER ================= */}
+      <div className="flex justify-between items-end mb-8 border-b border-gray-200 pb-6">
+
+        {/* Title Section */}
         <div>
-          <h1 className="text-4xl font-bold text-white tracking-wide">
+          <h1 className="text-3xl font-bold text-gray-800 tracking-wide">
             PROJECTS
           </h1>
-          <p className="text-gray-300 text-sm mt-1 tracking-wider">
+          <p className="text-gray-500 text-sm mt-1 tracking-wide">
             MANAGE YOUR SHIP DESIGN PROJECTS
           </p>
         </div>
 
-        {/* Actions Group (Search + Button) */}
+        {/* Actions Section */}
         <div className="flex items-center gap-4">
-          
+
           {/* Search Bar */}
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400 group-focus-within:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+          <div className="relative">
+            <Search
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+
             <input
               type="text"
               placeholder="SEARCH PROJECTS..."
-              className="bg-[#253a4d] text-white pl-11 pr-4 py-2.5 rounded-full border border-gray-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none w-64 placeholder-gray-500 text-sm tracking-wide transition-all shadow-inner"
+              className="
+                pl-10 pr-4 py-2.5
+                w-64
+                rounded-lg
+                border border-gray-300
+                bg-white
+                text-gray-700 text-sm
+                focus:outline-none
+                focus:ring-2 focus:ring-blue-500
+                focus:border-blue-500
+                transition-all
+              "
             />
           </div>
 
-          {/* + NEW PROJECT Button */}
-          <button className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-6 py-2.5 rounded-full font-bold tracking-wide shadow-lg transition-all transform hover:scale-105 active:scale-95 text-sm">
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            NEW PROJECT
+          {/* New Project Button */}
+          <button
+            onClick={() => navigate("/projects/new")}
+            className="
+              inline-flex items-center gap-2
+              px-5 py-2.5
+              rounded-lg
+              bg-gradient-to-r from-[#465FFF] to-[#5A6BFF]
+              text-white text-sm font-semibold
+              shadow-[0_4px_14px_rgba(90,107,255,0.35)]
+              hover:shadow-[0_6px_20px_rgba(90,107,255,0.45)]
+              hover:from-[#3548F5] hover:to-[#4B5CFF]
+              transition-all duration-300
+            "
+          >
+            <Plus size={18} />
+            New Project
           </button>
+
         </div>
       </div>
 
-      {/* Main Content Area (Placeholder) */}
+      {/* ================= CONTENT ================= */}
       <div className="flex-1">
-        <div className="w-full h-64 border-2 border-dashed border-gray-500/30 rounded-2xl flex flex-col items-center justify-center text-gray-400">
-          <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+
+        <div className="
+          w-full
+          h-72
+          border-2 border-dashed border-gray-300
+          rounded-xl
+          flex flex-col items-center justify-center
+          text-gray-500
+        ">
+
+          <svg
+            className="w-16 h-16 mb-4 opacity-40"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            />
           </svg>
-          <p className="text-lg tracking-wide">NO PROJECTS ACTIVE</p>
+
+          <p className="text-lg font-medium tracking-wide">
+            NO PROJECTS ACTIVE
+          </p>
+
         </div>
       </div>
 
