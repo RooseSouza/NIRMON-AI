@@ -64,16 +64,6 @@ export default function Login() {
     }
   };
 
-  const handleViewerLogin = () => {
-    setIsLoading(true);
-    // Viewer is still a simulation/bypass
-    setTimeout(() => {
-      localStorage.setItem("userRole", "viewer");
-      localStorage.setItem("userName", "Guest Viewer");
-      navigate("/dashboard");
-    }, 1000);
-  };
-
   return (
     <div className="flex min-h-screen bg-white font-sans">
       {/* LEFT SIDE - FORM */}
