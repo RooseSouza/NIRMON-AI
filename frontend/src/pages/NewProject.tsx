@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { jwtDecode } from "jwt-decode";
 
 const NewProject: React.FC = () => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ const NewProject: React.FC = () => {
 
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [targetDate, setTargetDate] = useState<Date | null>(null);
+
 
   const [formData, setFormData] = useState<any>({
     // STEP 1
@@ -19,7 +21,7 @@ const NewProject: React.FC = () => {
     clientName: "",
     shipyardName: "",
     projectStatus: "Active",
-    createdBy: "Admin",
+    createdBy: "",
 
     // STEP 2 (GA)
     vesselId: "",
@@ -63,6 +65,20 @@ const NewProject: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    const decoded: any = jwtDecode(token);
+    console.log("Decoded JWT:", decoded); // 👈 ADD THIS
+
+    setFormData((prev: any) => ({
+      ...prev,
+      createdBy: decoded?.role_name || decoded?.username || "",
+    }));
+  }
+}, []);
+
   const nextStep = () => setStep((prev) => prev + 1);
   const prevStep = () => setStep((prev) => prev - 1);
 
@@ -73,7 +89,7 @@ const NewProject: React.FC = () => {
       startDate,
       targetDate,
     });
-    alert("Project Created Successfully 🚢");
+    alert("Project Created Successfully");
     navigate("/projects");
   };
 
