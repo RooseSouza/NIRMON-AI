@@ -18,6 +18,9 @@ class Module(db.Model):
     module_id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     module_name = db.Column(db.String(100), nullable=False)
     status = db.Column(db.Boolean, default=True)
+    module_type = db.Column(db.String(50), nullable=False)
+    module_order = db.Column(db.Integer, nullable=False)
+    parent_module_id = db.Column(db.UUID(as_uuid=True), nullable=True)
 
 class RoleAccess(db.Model):
     __tablename__ = "role_access"
@@ -32,6 +35,7 @@ class RoleAccess(db.Model):
     edit_flag = db.Column(db.Boolean, default=False)
     delete_flag = db.Column(db.Boolean, default=False)
     approve_flag = db.Column(db.Boolean, default=False)
+    status = db.Column(db.Boolean, default=True)
 
 class Role(db.Model):
     __tablename__ = "roles"
