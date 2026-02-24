@@ -78,35 +78,56 @@ const NewProject: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 px-12 py-12">
-      <div className="bg-white w-full rounded-2xl shadow-lg p-16">
+   
+      <div className="w-full bg-white shadow-sm">
+  <div className="px-10 py-8">
 
         {/* STEPPER */}
-        <div className="flex items-center mb-14">
-          {["Project Info", "GA Parameters", "Version & Regulatory"].map(
-            (label, index) => (
-              <div key={index} className="flex items-center flex-1">
-                <div
-                  className={`w-10 h-10 flex items-center justify-center rounded-full font-semibold
-                  ${step >= index + 1 ? "bg-blue-600 text-white" : "bg-gray-300"}`}
-                >
-                  {index + 1}
-                </div>
+<div className="flex items-center mb-14">
+  {["Project Info", "GA Parameters", "Version & Regulatory"].map(
+    (label, index) => {
+      const currentStep = index + 1;
 
-                <span className="ml-3 font-medium text-gray-700">
-                  {label}
-                </span>
+      return (
+        <div key={index} className="flex items-center flex-1">
 
-                {index < 2 && (
-                  <div
-                    className={`flex-1 h-1 mx-6 
-                    ${step > index + 1 ? "bg-blue-600" : "bg-gray-300"}`}
-                  />
-                )}
-              </div>
-            )
+          {/* Circle */}
+          <div
+            onClick={() => setStep(currentStep)}
+            className={`w-10 h-10 flex items-center justify-center rounded-full font-semibold cursor-pointer transition-all duration-300
+            ${
+              step >= currentStep
+                ? "bg-blue-600 text-white"
+                : "bg-gray-300 text-gray-700"
+            }`}
+          >
+            {currentStep}
+          </div>
+
+          {/* Label */}
+          <span
+            onClick={() => setStep(currentStep)}
+            className="ml-3 font-medium text-gray-700 cursor-pointer select-none"
+          >
+            {label}
+          </span>
+
+          {/* Line */}
+          {index < 2 && (
+            <div
+              className={`flex-1 h-1 mx-6 transition-all duration-300
+              ${
+                step > currentStep
+                  ? "bg-blue-600"
+                  : "bg-gray-300"
+              }`}
+            />
           )}
         </div>
+      );
+    }
+  )}
+</div>
 
         {/* ================= STEP 1 ================= */}
         {step === 1 && (
@@ -198,8 +219,11 @@ const NewProject: React.FC = () => {
             </div>
 
             <div className="col-span-2 flex gap-6 mt-6">
+               <button type="button" onClick={() => navigate("/projects")} className="btn-secondary">Cancel</button>
+
+               
               <button type="button" onClick={nextStep} className="btn-primary">Next</button>
-              <button type="button" onClick={() => navigate("/projects")} className="btn-secondary">Cancel</button>
+             
             </div>
 
           </form>

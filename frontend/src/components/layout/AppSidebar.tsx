@@ -34,14 +34,27 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
+  // 🔥 UPDATED ACTIVE LOGIC
   const isActive = useCallback(
-    (path: string) => location.pathname === path,
+    (path: string) => {
+      // Dashboard exact match
+      if (path === "/dashboard") {
+        return location.pathname === "/dashboard";
+      }
+
+      // Projects & all sub routes
+      if (path === "/projects") {
+        return location.pathname.startsWith("/projects");
+      }
+
+      return false;
+    },
     [location.pathname]
   );
 
   return (
     <aside
-      className={`fixed top-0 flex flex-col lg:mt-0 top-0 px-5 left-0 
+      className={`fixed top-0 flex flex-col px-5 left-0 
       bg-white dark:bg-gray-900 dark:border-gray-800 
       text-gray-900 h-screen transition-all duration-300 
       ease-in-out z-50 border-r border-gray-200 
@@ -67,7 +80,7 @@ const AppSidebar: React.FC = () => {
           <img
             src={logo}
             alt="Nirmon Logo"
-            className={`object-contain ${
+            className={`object-contain transition-all duration-300 ${
               isExpanded || isHovered || isMobileOpen
                 ? "h-10 w-auto"
                 : "h-8 w-8"
@@ -80,38 +93,42 @@ const AppSidebar: React.FC = () => {
       <div className="flex flex-col overflow-y-auto no-scrollbar">
         <nav className="mb-6">
           <ul className="flex flex-col gap-4">
-            {navItems.map((nav) => (
-              <li key={nav.name}>
-                <Link
-                  to={nav.path}
-                  className={`menu-item group ${
-                    isActive(nav.path)
-                      ? "menu-item-active"
-                      : "menu-item-inactive"
-                  } ${
-                    !isExpanded && !isHovered
-                      ? "lg:justify-center"
-                      : "lg:justify-start"
-                  }`}
-                >
-                  <span
-                    className={`menu-item-icon-size ${
-                      isActive(nav.path)
-                        ? "menu-item-icon-active"
-                        : "menu-item-icon-inactive"
-                    }`}
-                  >
-                    {nav.icon}
-                  </span>
+            {navItems.map((nav) => {
+              const active = isActive(nav.path);
 
-                  {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className="menu-item-text">
-                      {nav.name}
+              return (
+                <li key={nav.name}>
+                  <Link
+                    to={nav.path}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
+                      ${
+                        active
+                          ? "bg-blue-100 text-blue-600"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }
+                      ${
+                        !isExpanded && !isHovered
+                          ? "lg:justify-center"
+                          : "lg:justify-start"
+                      }`}
+                  >
+                    <span
+                      className={`text-xl ${
+                        active ? "text-blue-600" : "text-gray-500"
+                      }`}
+                    >
+                      {nav.icon}
                     </span>
-                  )}
-                </Link>
-              </li>
-            ))}
+
+                    {(isExpanded || isHovered || isMobileOpen) && (
+                      <span className="font-medium">
+                        {nav.name}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </div>

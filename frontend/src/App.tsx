@@ -5,9 +5,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import NewProject from "./pages/NewProject";
-
 import DashboardLayout from "./components/layout/DashboardLayout";
-import ProtectedRoute from "./routes/ProtectedRoute";
 
 const App = () => {
   return (
@@ -15,26 +13,21 @@ const App = () => {
       <BrowserRouter>
         <Routes>
 
-          {/* ================= PUBLIC ROUTES ================= */}
+          {/* Login */}
           <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
 
-          {/* ================= PROTECTED ROUTES ================= */}
-          <Route element={<ProtectedRoute />}>
+          {/* Dashboard Layout Wrap */}
+          <Route element={<DashboardLayout />}>
 
-            {/* Routes WITH Sidebar */}
-            <Route element={<DashboardLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/projects" element={<Projects />} />
-            </Route>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/projects" element={<Projects />} />
 
-            {/* Full Screen Route (No Sidebar) */}
+            {/* 👇 ADD THIS LINE */}
             <Route path="/projects/new" element={<NewProject />} />
 
           </Route>
 
-          {/* ================= FALLBACK ================= */}
-          <Route path="*" element={<Navigate to="/dashboard" />} />
+          <Route path="*" element={<Navigate to="/" />} />
 
         </Routes>
       </BrowserRouter>
