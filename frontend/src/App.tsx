@@ -1,30 +1,37 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { SidebarProvider } from "./context/SidebarContext"; // <--- IMPORT THIS
+import { SidebarProvider } from "./context/SidebarContext";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
+import NewProject from "./pages/NewProject";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import { AuthProvider } from "./context/AuthContext";
 
 const App = () => {
   return (
-    // Wrap everything in SidebarProvider
     <SidebarProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Login />} />
+      <BrowserRouter>
+        <Routes>
 
-            <Route element={<DashboardLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/projects" element={<Projects />} />
-            </Route>
+          {/* Login */}
+          <Route path="/" element={<Login />} />
 
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+          {/* Dashboard Layout Wrap */}
+          <Route element={<DashboardLayout />}>
+
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/projects" element={<Projects />} />
+
+            {/* 👇 ADD THIS LINE */}
+            <Route path="/projects/new" element={<NewProject />} />
+
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" />} />
+
+        </Routes>
+      </BrowserRouter>
     </SidebarProvider>
   );
 };
