@@ -15,7 +15,7 @@ def create_project():
     current_user_id = get_jwt_identity()
 
     # Validate required fields
-    required_fields = ["projectName", "projectCode", "vesselType", "projectType"]
+    required_fields = ["projectName", "projectCode", "vesselId", "projectType"]
 
     for field in required_fields:
         if not data.get(field):
@@ -32,7 +32,7 @@ def create_project():
 
     # Create project object
     new_project = ShipProject(
-        vessel_id=data["vesselType"],
+        vessel_id=data["vesselId"],
         project_code=data["projectCode"],
         project_name=data["projectName"],
         project_type=data["projectType"],
