@@ -1,13 +1,25 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 const ProtectedRoute = () => {
-  const token = localStorage.getItem("token");
-  console.log("TOKEN:", localStorage.getItem("token"));
+  const location = useLocation();
 
+  // Get token from localStorage
+  const token = localStorage.getItem("token");
+
+  console.log("Protected Route Check → TOKEN:", token);
+
+  // If no token → redirect to login
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate 
+        to="/login" 
+        state={{ from: location }} 
+        replace 
+      />
+    );
   }
 
+  // If token exists → allow access
   return <Outlet />;
 };
 
