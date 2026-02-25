@@ -50,7 +50,7 @@ const NewProject: React.FC = () => {
       setToken(storedToken);
       fetchVesselTypes(storedToken); // Fetch types immediately
     } else {
-      alert("You must be logged in.");
+      alert("You must be Logged in.");
       navigate("/");
     }
   }, [navigate]);
