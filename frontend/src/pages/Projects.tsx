@@ -9,6 +9,7 @@ interface Project {
   project_name: string;
   project_code: string;
   project_status: string;
+  created_at: string; // Ensure your API returns this
 }
 
 const Projects: React.FC = () => {
@@ -32,7 +33,13 @@ const Projects: React.FC = () => {
 
         if (response.ok) {
           const data = await response.json();
-          setProjects(data.projects); // Assuming API returns { projects: [...] }
+          
+          // SORTING LOGIC: Newest First
+          const sortedProjects = (data.projects || []).sort((a: Project, b: Project) => {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+
+          setProjects(sortedProjects);
         } else {
           console.error("Failed to fetch projects");
         }
