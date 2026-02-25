@@ -1,35 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SidebarProvider } from "./context/SidebarContext";
 
-function App() {
-  const [count, setCount] = useState(0)
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import NewProject from "./pages/NewProject";
+import DashboardLayout from "./components/layout/DashboardLayout";
+import { AuthProvider } from "./context/AuthContext";
 
+const App = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <SidebarProvider>
+      <BrowserRouter>
+        <Routes>
 
-export default App
+          {/* Login */}
+          <Route path="/" element={<Login />} />
+
+          {/* Dashboard Layout Wrap */}
+          <Route element={<DashboardLayout />}>
+
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/projects" element={<Projects />} />
+
+            {/* 👇 ADD THIS LINE */}
+            <Route path="/projects/new" element={<NewProject />} />
+
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" />} />
+
+        </Routes>
+      </BrowserRouter>
+    </SidebarProvider>
+  );
+};
+
+export default App;
