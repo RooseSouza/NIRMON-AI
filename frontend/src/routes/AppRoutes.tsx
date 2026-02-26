@@ -2,50 +2,41 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import ProtectedRoute from "./ProtectedRoute";
+import DashboardLayout from "../components/layout/DashboardLayout";
 
 import Dashboard from "../pages/Dashboard";
 import Projects from "../pages/Projects";
 import NewProject from "../pages/NewProject";
 import InputParameter from "../pages/InputParameter";
 import Login from "../pages/Login";
-import Users from "../pages/Users";
+import ProjectDetails from "../pages/ProjectDetails";
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-
-      {/* 1️⃣ Public Route */}
+      {/* ✅ Public Route (NO sidebar) */}
       <Route path="/login" element={<Login />} />
 
-      {/* 2️⃣ Protected Routes */}
+      {/* ✅ Protected Routes */}
       <Route element={<ProtectedRoute />}>
 
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* 🔥 Wrap ALL protected pages with DashboardLayout */}
+        <Route element={<DashboardLayout />}>
 
-        {/* Dashboard */}
-        <Route path="/dashboard" element={<Dashboard />} />
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        {/* Projects */}
-        <Route path="/projects" element={<Projects />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/new" element={<NewProject />} />
+          <Route path="/projects/:id/input" element={<InputParameter />} />
+          <Route path="/projects/:id" element={<ProjectDetails />} />
 
-        {/* Create Project */}
-        <Route path="/projects/new" element={<NewProject />} />
-
-        {/* ✅ VERY IMPORTANT ROUTE (YOU WERE MISSING THIS) */}
-        <Route
-          path="/projects/:projectId/parameters"
-          element={<InputParameter />}
-        />
-
-        {/* Users */}
-        <Route path="/users" element={<Users />} />
-
+        </Route>
       </Route>
 
-      {/* 3️⃣ Fallback */}
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
-
     </Routes>
   );
 };

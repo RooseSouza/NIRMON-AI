@@ -2,238 +2,334 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { jwtDecode } from "jwt-decode";
+
+interface VesselType {
+  vessel_type_id: string;
+  type_name: string;
+}
 
 const NewProject: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<number>(1);
-
+  const [token, setToken] = useState<string | null>(null);
+  const [vesselTypes, setVesselTypes] = useState<VesselType[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Date States
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [targetDate, setTargetDate] = useState<Date | null>(null);
 
+  // Errors State
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-  const [formData, setFormData] = useState<any>({
-    // STEP 1
-    projectName: "",
-    projectCode: "",
-    vesselType: "",
-    projectType: "",
-    clientName: "",
-    shipyardName: "",
-
-    // STEP 2 (GA)
-    vesselId: "",
+  const [formData, setFormData] = useState({
+    // Step 1: Vessel
+    vesselTypeId: "", 
     loa: "",
     beam: "",
     draft: "",
     depth: "",
     displacement: "",
     designSpeed: "",
-    navigationArea: "",
+    navigationArea: "SEA",
     classSociety: "",
+    versionNumber: "1.0",
+
+    // Step 2: Project
+    projectName: "",
+    projectCode: "",
+    projectType: "",
+    clientName: "",
+    shipyardName: "",
   });
 
-  const handleChange = (e: any) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Fetch Logic
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+      fetchVesselTypes(storedToken);
+    } else {
+      navigate("/");
+    }
+  }, [navigate]);
+
+  const fetchVesselTypes = async (authToken: string) => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/vessels/types", {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setVesselTypes(data.vessel_types);
+      }
+    } catch (error) {
+      console.error("Error fetching types");
+    }
   };
 
-  useEffect(() => {
-  const token = localStorage.getItem("token");
+  // --- VALIDATION ---
+  const validateStep1 = () => {
+    const fields = ["vesselTypeId", "loa", "beam", "draft", "depth", "displacement", "designSpeed", "classSociety"];
+    let hasError = false;
+    let newErrors = { ...errors };
 
-  if (token) {
-    const decoded: any = jwtDecode(token);
-    console.log("Decoded JWT:", decoded); // 👈 ADD THIS
+    fields.forEach(field => {
+        if (!formData[field as keyof typeof formData]) {
+            newErrors[field] = "This field is required";
+            hasError = true;
+        }
+    });
+    setErrors(newErrors);
+    return !hasError;
+  };
 
-    setFormData((prev: any) => ({
-      ...prev,
-      createdBy: decoded?.role_name || decoded?.username || "",
-    }));
-  }
-}, []);
+  const validateStep2 = () => {
+    const fields = ["projectName", "projectCode", "projectType", "clientName", "shipyardName"];
+    let hasError = false;
+    let newErrors = { ...errors };
 
-  const nextStep = () => setStep((prev) => prev + 1);
-  const prevStep = () => setStep((prev) => prev - 1);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Verification: Ensure basic fields are present
-    if (!formData.projectName || !formData.projectCode) {
-      alert("Please fill in Project Name and Code.");
-      return;
+    fields.forEach(field => {
+        if (!formData[field as keyof typeof formData]) {
+            newErrors[field] = "This field is required";
+            hasError = true;
+        }
+    });
+    
+    if (!targetDate) {
+        // Optional: you can make target date mandatory or optional here
+        // newErrors["targetDate"] = "Required"; 
+        // hasError = true;
     }
 
-    // Create the final project object
-    const newProjectEntry = {
-      ...formData,
-      // This ID is crucial! It is what /projects/:projectId/parameters uses
-      id: Date.now().toString(), 
-      projectStatus: "Active", // Added default status for the card UI
-      startDate: startDate ? startDate.toISOString() : null,
-      targetDate: targetDate ? targetDate.toISOString() : null,
-      createdAt: new Date().toISOString(),
-    };
+    setErrors(newErrors);
+    return !hasError;
+  };
 
-    // 1. Get existing projects from localStorage
-    const existingProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear error on type
+    if (errors[e.target.name]) {
+        setErrors(prev => ({ ...prev, [e.target.name]: "" }));
+    }
+  };
 
-    // 2. Add the new project to the array
-    const updatedProjects = [...existingProjects, newProjectEntry];
+  // --- NAVIGATION ---
+  const handleNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateStep1()) {
+        setStep(2);
+    }
+  };
 
-    // 3. Save back to localStorage
-    localStorage.setItem("projects", JSON.stringify(updatedProjects));
-
-    alert("Project Created Successfully 🚢");
+  // --- FINAL SUBMIT (ATOMIC TRANSACTION LOGIC) ---
+  const handleFinalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Redirect back to the projects dashboard
-    navigate("/projects");
+    if (!validateStep2()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      // 1. Create Vessel First
+      const vesselResponse = await fetch("http://127.0.0.1:5000/api/vessels/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            vesselTypeId: formData.vesselTypeId,
+            loa: parseFloat(formData.loa),
+            beam: parseFloat(formData.beam),
+            draft: parseFloat(formData.draft),
+            depth: parseFloat(formData.depth),
+            displacement: parseFloat(formData.displacement),
+            designSpeed: parseFloat(formData.designSpeed),
+            navigationArea: formData.navigationArea,
+            classSociety: formData.classSociety,
+            versionNumber: formData.versionNumber
+        })
+      });
+
+      if (!vesselResponse.ok) {
+        const err = await vesselResponse.json();
+        throw new Error(err.error || "Vessel creation failed");
+      }
+
+      const vesselData = await vesselResponse.json();
+      const newVesselId = vesselData.vessel_id; // Got the ID!
+
+      // 2. Create Project using the new Vessel ID
+      const projectResponse = await fetch("http://127.0.0.1:5000/api/projects/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            vesselId: newVesselId, // LINKING HERE
+            projectCode: formData.projectCode,
+            projectName: formData.projectName,
+            projectType: formData.projectType,
+            clientName: formData.clientName,
+            shipyardName: formData.shipyardName,
+            projectStatus: "Active",
+            targetDeliveryDate: targetDate ? targetDate.toISOString().split('T')[0] : null
+        })
+      });
+
+      if (!projectResponse.ok) {
+        const err = await projectResponse.json();
+        throw new Error(err.error || "Project creation failed");
+      }
+
+      // Success!
+      alert("Project Created Successfully 🚢");
+      navigate("/projects");
+
+    } catch (error: any) {
+      console.error(error);
+      alert(`Failed: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="w-full bg-white shadow-sm min-h-screen">
+    <div className="w-full bg-white shadow-sm min-h-screen font-sans">
       <div className="px-10 py-8">
+        
         {/* STEPPER */}
         <div className="flex items-center mb-14 max-w-4xl mx-auto">
-          {["Project Info", "Vessel Info"].map((label, index) => {
+          {["Vessel Info", "Project Info"].map((label, index) => {
             const currentStep = index + 1;
             return (
               <div key={index} className="flex items-center flex-1">
-                {/* Circle */}
-                <div
-                  onClick={() => setStep(currentStep)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-full font-semibold cursor-pointer transition-all duration-300
-                  ${
-                    step >= currentStep
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-700"
-                  }`}
-                >
+                <div className={`w-10 h-10 flex items-center justify-center rounded-full font-semibold transition-all ${step >= currentStep ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-700"}`}>
                   {currentStep}
                 </div>
-
-                {/* Label */}
-                <span
-                  onClick={() => setStep(currentStep)}
-                  className="ml-3 font-medium text-gray-700 cursor-pointer select-none"
-                >
-                  {label}
-                </span>
-
-                {/* Line */}
-                {index < 1 && (
-                  <div
-                    className={`flex-1 h-1 mx-6 transition-all duration-300
-                    ${step > currentStep ? "bg-blue-600" : "bg-gray-300"}`}
-                  />
-                )}
+                <span className="ml-3 font-medium text-gray-700">{label}</span>
+                {index < 1 && <div className={`flex-1 h-1 mx-6 transition-all ${step > currentStep ? "bg-blue-600" : "bg-gray-300"}`} />}
               </div>
             );
           })}
         </div>
 
         <div className="max-w-5xl mx-auto">
-            {/* ================= STEP 1: Project Info ================= */}
+            
+            {/* STEP 1: VESSEL INFO (Just Next Button) */}
             {step === 1 && (
-            <form className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            <form onSubmit={handleNext} className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
+                
+                <div className="md:col-span-3">
+                    <label className="label">Vessel Type <span className="text-red-500">*</span></label>
+                    <select name="vesselTypeId" value={formData.vesselTypeId} onChange={handleChange} className={`input ${errors.vesselTypeId ? 'border-red-500' : ''}`} required>
+                        <option value="">Select Vessel Type</option>
+                        {vesselTypes.map((type) => (
+                            <option key={type.vessel_type_id} value={type.vessel_type_id}>{type.type_name}</option>
+                        ))}
+                    </select>
+                    {errors.vesselTypeId && <p className="text-red-500 text-xs mt-1">{errors.vesselTypeId}</p>}
+                </div>
+
+                {[
+                    { label: "LOA (m)", name: "loa" },
+                    { label: "Beam (m)", name: "beam" },
+                    { label: "Draft (m)", name: "draft" },
+                    { label: "Depth (m)", name: "depth" },
+                    { label: "Displacement (t)", name: "displacement" },
+                    { label: "Design Speed (kn)", name: "designSpeed" },
+                ].map((field) => (
+                    <div key={field.name}>
+                        <label className="label">{field.label} <span className="text-red-500">*</span></label>
+                        <input type="number" name={field.name} value={(formData as any)[field.name]} onChange={handleChange} className={`input ${errors[field.name] ? 'border-red-500' : ''}`} required min="0" step="0.01" />
+                        {errors[field.name] && <p className="text-red-500 text-xs mt-1">{errors[field.name]}</p>}
+                    </div>
+                ))}
+                
                 <div>
-                <label className="label">Project Name *</label>
-                <input name="projectName" value={formData.projectName} onChange={handleChange} className="input" placeholder="e.g. MV Apollo" />
+                    <label className="label">Navigation Area <span className="text-red-500">*</span></label>
+                    <select name="navigationArea" value={formData.navigationArea} onChange={handleChange} className="input" required>
+                        <option value="SEA">Sea</option>
+                        <option value="COASTAL">Coastal</option>
+                        <option value="RIVER">River</option>
+                    </select>
                 </div>
 
                 <div>
-                <label className="label">Project Code *</label>
-                <input name="projectCode" value={formData.projectCode} onChange={handleChange} className="input" placeholder="e.g. P-2024-01" />
+                    <label className="label">Class Society <span className="text-red-500">*</span></label>
+                    <input name="classSociety" value={formData.classSociety} onChange={handleChange} className={`input ${errors.classSociety ? 'border-red-500' : ''}`} required />
+                    {errors.classSociety && <p className="text-red-500 text-xs mt-1">{errors.classSociety}</p>}
                 </div>
 
-                <div>
-                <label className="label">Vessel Type *</label>
-                <select name="vesselType" value={formData.vesselType} onChange={handleChange} className="input">
-                    <option value="">Select Vessel Type</option>
-                    <option>Harbor and ASD Tugs</option>
-                    <option>River Vessel</option>
-                    <option>Coastal Vessel</option>
-                    <option>Barges</option>
-                    <option>Offshore support vessels</option>
-                    <option>Passenger ferries</option>
-                    <option>Petrol / utility / government vessels</option>
-                    <option>Fishing vessels</option>
-                    <option>Special purpose and custom vessels</option>
-                </select>
-                </div>
+                <div><label className="label">Version Number</label><input name="versionNumber" value={formData.versionNumber} className="input bg-gray-100" disabled /></div>
 
-                <div>
-                <label className="label">Project Type *</label>
-                <select name="projectType" value={formData.projectType} onChange={handleChange} className="input">
-                    <option value="">Select Type</option>
-                    <option>New Build</option>
-                    <option>Retrofit</option>
-                    <option>Conversion</option>
-                </select>
-                </div>
-
-                <div>
-                <label className="label">Client Name</label>
-                <input name="clientName" value={formData.clientName} onChange={handleChange} className="input" />
-                </div>
-
-                <div>
-                <label className="label">Shipyard Name</label>
-                <input name="shipyardName" value={formData.shipyardName} onChange={handleChange} className="input" />
-                </div>
-
-                <div>
-                <label className="label">Start Date & Time *</label>
-                <DatePicker
-                    selected={startDate}
-                    onChange={(date) => setStartDate(date)}
-                    showTimeSelect
-                    dateFormat="dd/MM/yyyy HH:mm"
-                    className="input w-full"
-                />
-                </div>
-
-                <div>
-                <label className="label">Target Date & Time</label>
-                <DatePicker
-                    selected={targetDate}
-                    onChange={(date) => setTargetDate(date)}
-                    showTimeSelect
-                    dateFormat="dd/MM/yyyy HH:mm"
-                    className="input w-full"
-                />
-                </div>
-
-                <div className="col-span-full flex gap-6 mt-6 border-t pt-8">
-                <button type="button" onClick={() => navigate("/projects")} className="px-8 py-2.5 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 transition-all">
-                    Cancel
-                </button>
-                <button type="button" onClick={nextStep} className="px-10 py-2.5 rounded-lg bg-blue-600 font-bold text-white hover:bg-blue-700 shadow-md transition-all">
-                    Next Step
-                </button>
+                <div className="col-span-full flex gap-6 mt-10 border-t pt-8">
+                    <button type="button" onClick={() => navigate("/projects")} className="btn-secondary">Cancel</button>
+                    <button type="submit" className="btn-primary">Next Step</button>
                 </div>
             </form>
             )}
 
-            {/* ================= STEP 2: Vessel Info ================= */}
+            {/* STEP 2: PROJECT INFO (Final Submit) */}
             {step === 2 && (
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
-                <div><label className="label">Vessel ID</label><input name="vesselId" value={formData.vesselId} onChange={handleChange} className="input"/></div>
-                <div><label className="label">LOA (m)</label><input name="loa" value={formData.loa} onChange={handleChange} className="input"/></div>
-                <div><label className="label">Beam (m)</label><input name="beam" value={formData.beam} onChange={handleChange} className="input"/></div>
-                <div><label className="label">Draft (m)</label><input name="draft" value={formData.draft} onChange={handleChange} className="input"/></div>
-                <div><label className="label">Depth (m)</label><input name="depth" value={formData.depth} onChange={handleChange} className="input"/></div>
-                <div><label className="label">Displacement</label><input name="displacement" value={formData.displacement} onChange={handleChange} className="input"/></div>
-                <div><label className="label">Design Speed</label><input name="designSpeed" value={formData.designSpeed} onChange={handleChange} className="input"/></div>
-                <div><label className="label">Navigation Area</label><input name="navigationArea" value={formData.navigationArea} onChange={handleChange} className="input"/></div>
-                <div><label className="label">Class Society</label><input name="classSociety" value={formData.classSociety} onChange={handleChange} className="input"/></div>
+            <form onSubmit={handleFinalSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                
+                {[
+                    { label: "Project Name", name: "projectName" },
+                    { label: "Project Code", name: "projectCode" },
+                ].map((field) => (
+                    <div key={field.name}>
+                        <label className="label">{field.label} <span className="text-red-500">*</span></label>
+                        <input name={field.name} value={(formData as any)[field.name]} onChange={handleChange} className={`input ${errors[field.name] ? 'border-red-500' : ''}`} required />
+                        {errors[field.name] && <p className="text-red-500 text-xs mt-1">{errors[field.name]}</p>}
+                    </div>
+                ))}
+                
+                <div className="md:col-span-2">
+                    <label className="label">Project Type <span className="text-red-500">*</span></label>
+                    <select name="projectType" value={formData.projectType} onChange={handleChange} className={`input ${errors.projectType ? 'border-red-500' : ''}`} required>
+                        <option value="">Select Type</option>
+                        <option value="New Build">New Build</option>
+                        <option value="Retrofit">Retrofit</option>
+                        <option value="Conversion">Conversion</option>
+                    </select>
+                    {errors.projectType && <p className="text-red-500 text-xs mt-1">{errors.projectType}</p>}
+                </div>
 
-                <div className="col-span-full flex gap-6 mt-10 border-t pt-8">
-                <button type="button" onClick={prevStep} className="px-8 py-2.5 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 transition-all">
-                    Back
-                </button>
-                <button type="submit" className="px-10 py-2.5 rounded-lg bg-green-600 font-bold text-white hover:bg-green-700 shadow-md transition-all">
-                    Create Project 🚢
-                </button>
+                {[
+                    { label: "Client Name", name: "clientName" },
+                    { label: "Shipyard Name", name: "shipyardName" },
+                ].map((field) => (
+                    <div key={field.name}>
+                        <label className="label">{field.label} <span className="text-red-500">*</span></label>
+                        <input name={field.name} value={(formData as any)[field.name]} onChange={handleChange} className={`input ${errors[field.name] ? 'border-red-500' : ''}`} required />
+                        {errors[field.name] && <p className="text-red-500 text-xs mt-1">{errors[field.name]}</p>}
+                    </div>
+                ))}
+
+                <div className="md:col-span-2 grid grid-cols-2 gap-12">
+                    <div>
+                        <label className="label">Start Date</label>
+                        <DatePicker selected={startDate} onChange={(date: Date | null) => setStartDate(date)} dateFormat="dd/MM/yyyy" className="input w-full bg-gray-100 cursor-not-allowed" disabled />
+                    </div>
+                    <div>
+                        <label className="label">Target Delivery Date <span className="text-red-500">*</span></label>
+                        <DatePicker selected={targetDate} onChange={(date: Date | null) => setTargetDate(date)} dateFormat="dd/MM/yyyy" className="input w-full" placeholderText="Select Date" required />
+                    </div>
+                </div>
+
+                <div className="col-span-full flex gap-6 mt-6 border-t pt-8">
+                    <button type="button" onClick={() => setStep(1)} className="btn-secondary" disabled={isSubmitting}>Back</button>
+                    
+                    <button 
+                        type="submit" 
+                        className={`btn-primary bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2 ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""}`}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? "Creating..." : "Create Project"}
+                    </button>
                 </div>
             </form>
             )}
