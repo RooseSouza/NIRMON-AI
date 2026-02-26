@@ -125,7 +125,7 @@ class ShipProject(db.Model):
     client_name = db.Column(db.String(150))
     shipyard_name = db.Column(db.String(150))
 
-    project_status = db.Column(db.String(30), nullable=False, default="Active")
+    project_status = db.Column(db.String(30), nullable=False, default="Under Review")
 
     start_date = db.Column(db.Date, nullable=False)
     target_delivery_date = db.Column(db.Date)

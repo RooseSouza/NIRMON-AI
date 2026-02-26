@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Search } from "lucide-react";
 import ProjectCard from "../components/project/ProjectCard";
 
-// Interface matching your Backend API response structure
+// Interface matching your API response
 interface Project {
   project_id: string;
   project_name: string;
   project_code: string;
   project_status: string;
+  created_at: string; // Ensure your API returns this
 }
 
 const Projects: React.FC = () => {
@@ -17,28 +18,28 @@ const Projects: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // 🔄 Fetch Projects from Flask API
+  // 🔄 Fetch Projects from API
   useEffect(() => {
     const fetchProjects = async () => {
       const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
+      if (!token) return;
 
       try {
         const response = await fetch("http://127.0.0.1:5000/api/projects/", {
-          method: "GET",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (response.ok) {
           const data = await response.json();
-          // API returns { projects: [...] }, we set the array to state
-          setProjects(data.projects || []); 
+          
+          // SORTING LOGIC: Newest First
+          const sortedProjects = (data.projects || []).sort((a: Project, b: Project) => {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+
+          setProjects(sortedProjects);
         } else {
           console.error("Failed to fetch projects");
         }
@@ -50,7 +51,7 @@ const Projects: React.FC = () => {
     };
 
     fetchProjects();
-  }, [navigate]);
+  }, []);
 
   // 🔎 Search filtering logic
   const filteredProjects = projects.filter((project) =>
@@ -73,6 +74,7 @@ const Projects: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Search */}
           <div className="relative">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -86,7 +88,7 @@ const Projects: React.FC = () => {
 
           <button
             onClick={() => navigate("/projects/new")}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#465FFF] text-white text-sm font-semibold shadow-md hover:bg-[#3548F5] transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#465FFF] to-[#5A6BFF] text-white text-sm font-semibold shadow-md hover:from-[#3548F5] hover:to-[#4B5CFF] hover:shadow-lg transition-all duration-300"
           >
             <Plus size={18} />
             New Project
@@ -106,22 +108,16 @@ const Projects: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProjects.map((project) => (
-        <ProjectCard
-         // 1. Unique key for React
-              key={project.project_id} 
-      
-          // 2. THE LOGIC: Pass the database 'project_id' into the 'id' prop
-              id={project.project_id} 
-      
-      // 3. Pass the rest of the data
-      projectCode={project.project_code}
-      projectName={project.project_name}
-      projectStatus={project.project_status}
-      vesselType="Ship Design" 
-    />
-  ))}
-</div>
+            {filteredProjects.map((project) => (
+              <ProjectCard
+                key={project.project_id}
+                id={project.project_id}
+                projectCode={project.project_code}
+                projectName={project.project_name}
+                projectStatus={project.project_status}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>
