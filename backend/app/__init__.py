@@ -34,5 +34,6 @@ def create_app():
     app.register_blueprint(project_bp, url_prefix="/api/projects")
     app.register_blueprint(vessel_bp, url_prefix="/api/vessels")
 
+
     print("SECRET_KEY:", app.config["SECRET_KEY"])
     return app

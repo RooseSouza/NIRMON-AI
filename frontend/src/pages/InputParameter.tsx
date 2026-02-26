@@ -1,20 +1,49 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Plus, Trash2, ArrowLeft, Save, Layout } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Save, Layout, Loader2 } from "lucide-react";
 
 const InputParameter: React.FC = () => {
-  const { projectId } = useParams();
+  const { projectId } = useParams(); // This gets the ID from the URL bar
   const navigate = useNavigate();
+  
   const [projectDetails, setProjectDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Load project details based on the URL ID
+  // 🔄 DATABASE LOGIC: Fetch specific project details from API
   useEffect(() => {
-    const savedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-    const currentProject = savedProjects.find((p: any) => p.id === projectId);
-    if (currentProject) {
-      setProjectDetails(currentProject);
+    const fetchProjectDetails = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        // Calling your backend endpoint for a single project
+        const response = await fetch(`http://127.0.0.1:5000/api/projects/${projectId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Assuming your API returns { project: { project_name: '...', ... } }
+          setProjectDetails(data.project);
+        } else {
+          console.error("Project not found in database");
+        }
+      } catch (error) {
+        console.error("Error connecting to server:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (projectId) {
+      fetchProjectDetails();
     }
-  }, [projectId]);
+  }, [projectId, navigate]);
 
   const [decks, setDecks] = useState<any[]>([
     {
@@ -59,8 +88,19 @@ const InputParameter: React.FC = () => {
     }
   };
 
+  // Show a loader while the database is fetching the ship name
+  if (loading) {
+    return (
+      <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-50">
+        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+        <p className="mt-4 text-gray-500 font-bold uppercase tracking-widest">Loading Vessel Parameters...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full flex flex-col px-8 py-8 bg-gray-50 min-h-screen">
+      {/* ================= HEADER ================= */}
       <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate("/projects")} className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 transition-all">
@@ -68,8 +108,8 @@ const InputParameter: React.FC = () => {
           </button>
           <div>
             <h1 className="text-3xl font-bold text-gray-800 tracking-tight uppercase">Input Parameters</h1>
-            <p className="text-blue-600 text-sm mt-1 font-bold uppercase tracking-widest">
-              Nirmon AI Project: {projectDetails?.projectName || "Loading..."} ({projectDetails?.projectCode})
+            <p className="text-blue-600 text-sm mt-1 font-bold uppercase tracking-widest italic">
+              Nirmon AI Project: {projectDetails?.project_name || "Unknown Project"} ({projectDetails?.project_code || "---"})
             </p>
           </div>
         </div>
@@ -84,9 +124,10 @@ const InputParameter: React.FC = () => {
         </div>
       </div>
 
+      {/* ================= DECK CARDS ================= */}
       <div className="flex flex-col gap-8">
         {decks.map((deck, index) => (
-          <div key={index} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div key={index} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
             <div className="bg-gray-800 px-6 py-3 flex justify-between items-center text-white">
               <div className="flex items-center gap-2">
                 <Layout size={18} className="text-blue-400" />
@@ -110,7 +151,7 @@ const InputParameter: React.FC = () => {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Elevation (Z)</label>
-                <input name="deckElevationZ" onChange={(e) => handleInputChange(index, e)} className="border rounded-lg p-2.5 text-sm outline-none" />
+                <input name="deckElevationZ" onChange={(e) => handleInputChange(index, e)} className="border rounded-lg p-2.5 text-sm outline-none" placeholder="0.000 m" />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Deck Type</label>
@@ -123,22 +164,22 @@ const InputParameter: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-6 pt-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="isWatertight" onChange={(e) => handleInputChange(index, e)} className="w-4 h-4 rounded text-blue-600" />
-                  <span className="text-sm font-bold text-gray-700">Watertight</span>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input type="checkbox" name="isWatertight" onChange={(e) => handleInputChange(index, e)} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer" />
+                  <span className="text-sm font-bold text-gray-700 group-hover:text-blue-600">Watertight</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="isFreeboardDeck" onChange={(e) => handleInputChange(index, e)} className="w-4 h-4 rounded text-blue-600" />
-                  <span className="text-sm font-bold text-gray-700">Freeboard</span>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input type="checkbox" name="isFreeboardDeck" onChange={(e) => handleInputChange(index, e)} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer" />
+                  <span className="text-sm font-bold text-gray-700 group-hover:text-blue-600">Freeboard</span>
                 </label>
               </div>
 
-              {/* Other inputs like Camber, Sheer, etc. stay here */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Plate Thickness</label>
-                <input name="deckPlateThickness" onChange={(e) => handleInputChange(index, e)} className="border rounded-lg p-2.5 text-sm outline-none" />
+                <input name="deckPlateThickness" onChange={(e) => handleInputChange(index, e)} className="border rounded-lg p-2.5 text-sm outline-none" placeholder="mm" />
               </div>
             </div>
+            
             <div className="px-8 py-2 bg-gray-50 border-t text-[10px] font-mono text-gray-400 flex gap-4 uppercase">
               <span>Created: {deck.createdAt}</span>
               {deck.modifiedAt && <span>Modified: {deck.modifiedAt}</span>}
