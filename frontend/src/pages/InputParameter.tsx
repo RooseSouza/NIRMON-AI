@@ -124,7 +124,7 @@ const InputParameter: React.FC = () => {
         </div>
       </div>
 
-      {/* ================= DECK CARDS ================= */}
+      {/* ================= DECK CARDS ================== */}
       <div className="flex flex-col gap-8">
         {decks.map((deck, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
