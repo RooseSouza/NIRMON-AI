@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Plus, Trash2, ArrowLeft, Save, Layout, Loader2 } from "lucide-react";
 
 const InputParameter: React.FC = () => {
-  const { projectId } = useParams(); // This gets the ID from the URL bar
+  const { id } = useParams(); // This gets the ID from the URL bar
   const navigate = useNavigate();
   
   const [projectDetails, setProjectDetails] = useState<any>(null);
@@ -11,22 +11,22 @@ const InputParameter: React.FC = () => {
 
   // 🔄 DATABASE LOGIC: Fetch specific project details from API
   useEffect(() => {
-    console.log("🛠️ InputParameter Mounted. Project ID:", projectId);
+    console.log("🛠️ InputParameter Mounted. Project ID:", id);
 
     const fetchProjectDetails = async () => {
       const token = localStorage.getItem("token");
 
-      console.log("🔄 Fetching details for project:", projectId);
+      console.log("🔄 Fetching details for project:", id);
 
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/projects/${projectId}`, {
+        const response = await fetch(`http://127.0.0.1:5000/api/projects/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         if (response.ok) {
           const data = await response.json();
           console.log("✅ Project Details Loaded:", data);
-          setProjectDetails(data.project);
+          setProjectDetails(data);
         } else {
           console.error("❌ Failed to fetch project. Status:", response.status);
         }
@@ -37,8 +37,8 @@ const InputParameter: React.FC = () => {
       }
     };
 
-    if (projectId) fetchProjectDetails();
-  }, [projectId, navigate]);
+    if (id) fetchProjectDetails();
+  }, [id]);
 
   const [decks, setDecks] = useState<any[]>([
     {
