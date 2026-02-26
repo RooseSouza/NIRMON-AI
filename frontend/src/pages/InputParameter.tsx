@@ -183,7 +183,6 @@ const InputParameter: React.FC = () => {
         ))}
       </div>
     </div>
-  );
+);
 };
-
 export default InputParameter;
