@@ -53,7 +53,7 @@ const Projects: React.FC = () => {
     fetchProjects();
   }, []);
 
-  // 🔎 Filter logic
+  // 🔎 Search filtering logic
   const filteredProjects = projects.filter((project) =>
     project.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     project.project_code.toLowerCase().includes(searchTerm.toLowerCase())
@@ -86,7 +86,6 @@ const Projects: React.FC = () => {
             />
           </div>
 
-          {/* New Project Button */}
           <button
             onClick={() => navigate("/projects/new")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#465FFF] to-[#5A6BFF] text-white text-sm font-semibold shadow-md hover:from-[#3548F5] hover:to-[#4B5CFF] hover:shadow-lg transition-all duration-300"
@@ -97,7 +96,7 @@ const Projects: React.FC = () => {
         </div>
       </div>
 
-      {/* ================= CONTENT ================= */}
+      {/* ================= PROJECT GRID ================= */}
       <div className="flex-1">
         {loading ? (
           <div className="flex justify-center items-center h-64">
