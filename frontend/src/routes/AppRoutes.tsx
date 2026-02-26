@@ -8,8 +8,7 @@ import Projects from "../pages/Projects";
 import NewProject from "../pages/NewProject";
 import InputParameter from "../pages/InputParameter";
 import Login from "../pages/Login";
-import Users from "../pages/Users";
-import ProjectDetails from "../pages/ProjectDetails";
+
 
 const AppRoutes: React.FC = () => {
   return (
