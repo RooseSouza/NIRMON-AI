@@ -9,6 +9,7 @@ import Projects from "../pages/Projects";
 import NewProject from "../pages/NewProject";
 import InputParameter from "../pages/InputParameter";
 import Login from "../pages/Login";
+import ProjectDetails from "../pages/ProjectDetails";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -29,6 +30,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/new" element={<NewProject />} />
           <Route path="/projects/:id/input" element={<InputParameter />} />
+          <Route path="/projects/:id" element={<ProjectDetails />} />
 
         </Route>
       </Route>

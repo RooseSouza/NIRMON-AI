@@ -20,8 +20,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const handleClick = () => {
     console.log("👉 Project Card Clicked!");
     console.log("   ID:", id);
-    console.log("   Navigating to:", `/projects/${id}/input`);
-    navigate(`/projects/${id}/input`);
+    console.log("   Navigating to:", `/projects/${id}`);
+    navigate(`/projects/${id}`);
   };
 
   // Helper for colors (kept same)
