@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 const HullGeometry: React.FC = () => {
-  const { projectId } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
