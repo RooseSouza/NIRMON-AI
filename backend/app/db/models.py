@@ -108,6 +108,7 @@ class Vessel(db.Model):
         CheckConstraint('displacement >= 0', name='check_displacement_positive'),
         CheckConstraint('design_speed >= 0', name='check_speed_positive'),
     )
+    projects = db.relationship("ShipProject", backref="vessel", lazy=True)
 
 
 class ShipProject(db.Model):
@@ -125,7 +126,7 @@ class ShipProject(db.Model):
     client_name = db.Column(db.String(150))
     shipyard_name = db.Column(db.String(150))
 
-    project_status = db.Column(db.String(30), nullable=False, default="Under Review")
+    project_status = db.Column(db.String(30), nullable=False, default="Active")
 
     start_date = db.Column(db.Date, nullable=False)
     target_delivery_date = db.Column(db.Date)

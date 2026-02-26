@@ -9,7 +9,7 @@ const ProtectedRoute = () => {
   console.log("Protected Route Check → TOKEN:", token);
 
   // If no token → redirect to login
-  if (!token) {
+ if (!token) {
     return (
       <Navigate 
         to="/login" 
