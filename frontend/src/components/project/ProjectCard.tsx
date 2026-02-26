@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Ship } from 'lucide-react';
 
 interface ProjectCardProps {
-  id: string;
+  id: string; // This must be the project_id from your Neon DB
   projectCode: string;
   projectName: string;
   projectStatus: string;
@@ -17,37 +17,24 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  const handleCardClick = () => {
+    // LOGIC: Check if ID exists, then navigate to the Details page
+    if (id) {
+      console.log("Navigating to project details for ID:", id);
+      navigate(`/projects/${id}`); 
+    } else {
+      console.error("No ID found for this project card!");
+    }
+  };
+
   return (
     <div
-      onClick={() => navigate(`/projects/${id}/parameters`)}
-      className="
-        group
-        bg-white
-        border border-gray-200
-        rounded-xl
-        p-8
-        shadow-sm
-        hover:shadow-xl
-        hover:border-blue-500
-        hover:-translate-y-1
-        transition-all duration-300
-        cursor-pointer
-        relative
-        min-h-[180px]
-      "
+      onClick={handleCardClick}
+      className="group bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-xl hover:border-blue-500 hover:-translate-y-1 transition-all duration-300 cursor-pointer relative min-h-[180px]"
     >
       {/* Top Row: Code + Status */}
       <div className="flex justify-between items-start mb-6">
-        <span className="
-          px-3 py-1
-          rounded
-          bg-blue-50
-          text-blue-600
-          text-[10px]
-          font-bold
-          uppercase
-          border border-blue-100
-        ">
+        <span className="px-3 py-1 rounded bg-blue-50 text-blue-600 text-[10px] font-bold uppercase border border-blue-100">
           {projectCode}
         </span>
 
@@ -60,22 +47,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       </div>
 
       {/* Project Name */}
-      <h3 className="
-        text-2xl font-bold text-gray-900 mb-1
-        group-hover:text-blue-600
-        transition-colors
-      ">
+      <h3 className="text-2xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
         {projectName}
       </h3>
 
       {/* Decorative Icon */}
-      <Ship className="
-        absolute right-4 bottom-4
-        w-12 h-12
-        text-gray-100
-        group-hover:text-blue-50
-        transition-colors
-      " />
+      <Ship className="absolute right-4 bottom-4 w-12 h-12 text-gray-100 group-hover:text-blue-50 transition-colors" />
     </div>
   );
 };
