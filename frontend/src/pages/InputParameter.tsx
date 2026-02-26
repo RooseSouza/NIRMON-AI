@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Users, ShieldCheck, ChevronRight, Anchor, Loader2 } from 'lucide-react';
 
 const InputParameter: React.FC = () => {
   // Use 'projectId' to match the route we defined in AppRoutes
-  const { projectId } = useParams<{ projectId: string }>();
+  const { id } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -24,9 +24,12 @@ const InputParameter: React.FC = () => {
     passenger_count: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
   
   const [projectDetails, setProjectDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
