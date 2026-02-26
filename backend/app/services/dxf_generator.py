@@ -1,94 +1,51 @@
 import ezdxf
 import os
 
-
 class DXFGenerator:
 
-    def generate(self, layout: dict, data: dict, filename: str):
+    def generate(self, geometry_model, file_name="hull_output.dxf"):
 
-        # Create DXF document
-        doc = ezdxf.new("R2010")
+        doc = ezdxf.new()
         msp = doc.modelspace()
 
-        # Extract main parameters
-        beam = float(data.get("beam", 30))
+        loa = geometry_model.loa
+        depth = geometry_model.depth
+        draft = geometry_model.draft
+        deck_z = geometry_model.deck_z
+        keel_z = geometry_model.keel_z
+        midship_x = geometry_model.midship_x
 
-        engine = layout.get("engine_room", {})
-        start = engine.get("start", 0)
-        end = engine.get("end", 0)
+        # Baseline
+        msp.add_line((0, keel_z), (loa, keel_z))
 
-        cargo = layout.get("cargo_zone", {})
-        cstart = cargo.get("start", 0)
-        cend = cargo.get("end", 0)
+        # Deck Line
+        msp.add_line((0, deck_z), (loa, deck_z))
 
-        # -------------------------
-        # Create Layers
-        # -------------------------
-        if "ENGINE" not in doc.layers:
-            doc.layers.add(name="ENGINE", color=1)  # red
+        # Midship Line
+        msp.add_line((midship_x, keel_z), (midship_x, deck_z))
 
-        if "CARGO" not in doc.layers:
-            doc.layers.add(name="CARGO", color=3)  # green
+        output_dir = "outputs"
 
-        if "TEXT" not in doc.layers:
-            doc.layers.add(name="TEXT", color=7)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-        # -------------------------
-        # Draw Cargo Zone
-        # -------------------------
-        msp.add_lwpolyline(
-            [
-                (cstart, 0),
-                (cend, 0),
-                (cend, beam),
-                (cstart, beam),
-                (cstart, 0),
-            ],
-            dxfattribs={"layer": "CARGO"}
-        )
+        file_path = os.path.join(output_dir, file_name)
 
-        # -------------------------
-        # Draw Engine Room
-        # -------------------------
-        msp.add_lwpolyline(
-            [
-                (start, 0),
-                (end, 0),
-                (end, beam),
-                (start, beam),
-                (start, 0),
-            ],
-            dxfattribs={"layer": "ENGINE"}
-        )
-
-        # -------------------------
-        # Add Separation Line
-        # -------------------------
-        msp.add_line(
-            (start, 0),
-            (start, beam),
-            dxfattribs={"layer": "ENGINE"}
-        )
-
-        # -------------------------
-        # Add Labels
-        # -------------------------
-        msp.add_text(
-            "CARGO ZONE",
-            dxfattribs={"height": beam * 0.05, "layer": "TEXT"}
-        ).set_placement((cstart + 5, beam / 2))
-
-        msp.add_text(
-            "ENGINE ROOM",
-            dxfattribs={"height": beam * 0.05, "layer": "TEXT"}
-        ).set_placement((start + 2, beam / 2))
-
-        # -------------------------
-        # Ensure folder exists
-        # -------------------------
-        os.makedirs("generated_files", exist_ok=True)
-
-        file_path = os.path.join("generated_files", filename)
+        # your dxf drawing code here
         doc.saveas(file_path)
 
         return file_path
+    
+
+    def generate_from_geometry(self, geometry_model, filename="hull_output.dxf"):
+
+        print("Generating DXF from geometry model...")
+
+        geo = geometry_model.to_dict()
+
+        print("LOA:", geo["loa"])
+        print("Breadth:", geo["breadth"])
+        print("Depth:", geo["depth"])
+
+        # For now just return fake path
+        return f"outputs/{filename}"

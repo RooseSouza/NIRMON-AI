@@ -6,6 +6,7 @@ from app.services.dxf_generator import DXFGenerator
 from app.db.models import AIGAOutput
 from app.db.models import GAInputMaster, HullGeometry
 from app.db.models import RuleMaster
+from app.services.hull_geometry_builder import HullGeometryBuilder
 from app.db.database import db
 
 generation_bp = Blueprint("generation", __name__)
@@ -14,13 +15,12 @@ generation_bp = Blueprint("generation", __name__)
 def generate_ga():
 
     data = request.get_json()
-
     ga_input_id = data.get("ga_input_id")
 
     if not ga_input_id:
         return jsonify({"error": "ga_input_id is required"}), 400
 
-    # Fetch GA Input Master
+    # 1️⃣ Fetch GA Input
     ga_input = GAInputMaster.query.filter_by(
         ga_input_id=ga_input_id,
         is_active=True
@@ -29,32 +29,25 @@ def generate_ga():
     if not ga_input:
         return jsonify({"error": "GA Input not found"}), 404
 
-    # Fetch Hull Geometry (1-to-1)
-    hull = GAInputHullGeometry.query.filter_by(
+    # 2️⃣ Fetch Hull Geometry
+    hull = HullGeometry.query.filter_by(
         ga_input_id=ga_input_id
     ).first()
 
     if not hull:
         return jsonify({"error": "Hull geometry not found"}), 404
 
-    # 🧠 Print to console (for debugging)
-    print("----- HULL DATA FETCHED -----")
-    print("LOA:", hull.length_overall)
-    print("LBP:", hull.length_between_perpendiculars)
-    print("BREADTH:", hull.breadth_moulded)
-    print("DEPTH:", hull.depth_moulded)
-    print("DRAFT:", hull.design_draft)
-    print("-----------------------------")
+    # Build internal geometry model
+    geometry_model = HullGeometryBuilder.build(hull)
 
-    # Return hull values to Postman
+    # 🔹 Generate DXF file
+    dxf_generator = DXFGenerator()
+    file_path = dxf_generator.generate(geometry_model, "hull_output.dxf")
+
+    print("DXF saved at:", file_path)
+
     return jsonify({
         "status": "success",
-        "ga_input_id": str(ga_input_id),
-        "hull_geometry": {
-            "length_overall": float(hull.length_overall),
-            "length_between_perpendiculars": float(hull.length_between_perpendiculars),
-            "breadth_moulded": float(hull.breadth_moulded),
-            "depth_moulded": float(hull.depth_moulded),
-            "design_draft": float(hull.design_draft)
-        }
+        "geometry_model": geometry_model.to_dict(),
+        "file_path": file_path
     })
