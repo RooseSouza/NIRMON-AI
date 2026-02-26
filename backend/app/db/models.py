@@ -5,6 +5,8 @@ from sqlalchemy import CheckConstraint
 from sqlalchemy import Enum
 from sqlalchemy.dialects.postgresql import UUID
 
+from sqlalchemy.dialects.postgresql import JSONB
+
 
 class User(db.Model):
     __tablename__ = "users"
@@ -148,6 +150,56 @@ class ShipProject(db.Model):
 
     is_deleted = db.Column(db.Boolean, default=False, nullable=False)
 
+
+class AIGAOutput(db.Model):
+     __tablename__ = "ai_ga_output"
+
+     ga_output_id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+     project_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("ship_projects.project_id"),
+        nullable=True
+    )
+
+     vessel_id = db.Column(
+     UUID(as_uuid=True),
+        db.ForeignKey("vessel.vessel_id"),
+        nullable=True
+    )
+
+     ga_input_id = db.Column(UUID(as_uuid=True), nullable=True)
+
+     version_number = db.Column(db.Integer, nullable=False, default=1)
+
+     parent_output_id = db.Column(UUID(as_uuid=True), nullable=True)
+
+     cad_file_path = db.Column(db.String(255), nullable=False)
+
+     layout_data_json = db.Column(JSONB, nullable=True)
+
+     ai_model_version = db.Column(db.String(100), nullable=False)
+
+     generation_type = db.Column(db.String(50), nullable=False)
+
+     output_status = db.Column(db.String(30), default="Generated")
+
+     generated_by = db.Column(UUID(as_uuid=True), nullable=True)
+
+     generated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class RuleMaster(db.Model):
+    __tablename__ = "rules_master"
+
+    rule_id = db.Column(db.String(20), primary_key=True)
+    category = db.Column(db.String(100), nullable=False)
+    parameter_name = db.Column(db.String(100), nullable=False)
+    operator = db.Column(db.String(10), nullable=False)
+    expression_value = db.Column(db.String(255), nullable=False)
+    unit = db.Column(db.String(20))
+    constraint_type = db.Column(db.String(10), nullable=False)
+    status = db.Column(db.Boolean, default=True, nullable=False)
 class GAInputMaster(db.Model):
     __tablename__ = "ga_input_master"
 
