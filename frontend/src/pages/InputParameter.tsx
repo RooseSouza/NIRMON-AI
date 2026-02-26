@@ -27,6 +27,60 @@ const InputParameter: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  
+  const [projectDetails, setProjectDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  //  DATABASE LOGIC: Fetch specific project details from API
+  useEffect(() => {
+    console.log("🛠️ InputParameter Mounted. Project ID:", id);
+
+    const fetchProjectDetails = async () => {
+      const token = localStorage.getItem("token");
+
+      console.log("🔄 Fetching details for project:", id);
+
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/api/projects/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("✅ Project Details Loaded:", data);
+          setProjectDetails(data);
+        } else {
+          console.error("❌ Failed to fetch project. Status:", response.status);
+        }
+      } catch (error) {
+        console.error("❌ API Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchProjectDetails();
+  }, [id]);
+
+  const [decks, setDecks] = useState<any[]>([
+    {
+      deckSequence: 1,
+      deckName: "",
+      deckCode: "",
+      deckElevationZ: "",
+      deckType: "Main Deck",
+      isWatertight: false,
+      isFreeboardDeck: false,
+      createdAt: new Date().toLocaleString(),
+    },
+  ]);
+
+  const handleInputChange = (index: number, e: any) => {
+    const { name, value, type, checked } = e.target;
+    const updatedDecks = [...decks];
+    updatedDecks[index][name] = type === "checkbox" ? checked : value;
+    updatedDecks[index].modifiedAt = new Date().toLocaleString();
+    setDecks(updatedDecks);
   };
 
   const handleSave = async () => {

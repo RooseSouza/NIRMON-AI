@@ -147,3 +147,189 @@ class ShipProject(db.Model):
     deleted_at = db.Column(db.DateTime)
 
     is_deleted = db.Column(db.Boolean, default=False, nullable=False)
+
+class GAInputMaster(db.Model):
+    __tablename__ = "ga_input_master"
+
+    # -----------------------------
+    # Primary Key
+    # -----------------------------
+    ga_input_id = db.Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
+
+    # -----------------------------
+    # Foreign Keys
+    # -----------------------------
+    project_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("ship_projects.project_id"),
+        nullable=False
+    )
+
+    vessel_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("vessel.vessel_id"),
+        nullable=False
+    )
+
+    created_by = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("users.user_id"),
+        nullable=False
+    )
+
+    modified_by = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("users.user_id"),
+        nullable=True
+    )
+
+    submitted_by = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("users.user_id"),
+        nullable=True
+    )
+
+    approved_by = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("users.user_id"),
+        nullable=True
+    )
+
+    # -----------------------------
+    # Versioning
+    # -----------------------------
+    version_number = db.Column(
+        db.Integer,
+        nullable=False,
+        default=1
+    )
+
+    version_status = db.Column(
+        Enum(
+            "draft",
+            "submitted",
+            "approved",
+            "rejected",
+            "superseded",
+            name="ga_version_status_enum"
+        ),
+        nullable=False,
+        default="draft"
+    )
+
+    is_current_version = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True
+    )
+
+    # -----------------------------
+    # Regulatory & Vessel Info
+    # -----------------------------
+    regulatory_framework = db.Column(
+        db.String(50),
+        nullable=False
+    )
+
+    class_notation = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    gross_tonnage = db.Column(
+        db.Numeric(10, 2),
+        nullable=True
+    )
+
+    deadweight = db.Column(
+        db.Numeric(10, 2),
+        nullable=True
+    )
+
+    # -----------------------------
+    # Manning Details
+    # -----------------------------
+    crew_count = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    officer_count = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    rating_count = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    passenger_count = db.Column(
+        db.Integer,
+        nullable=True,
+        default=0
+    )
+
+    # -----------------------------
+    # Operational Parameters
+    # -----------------------------
+    endurance_days = db.Column(
+        db.Numeric(5, 1),
+        nullable=False
+    )
+
+    voyage_duration_days = db.Column(
+        db.Numeric(5, 1),
+        nullable=True
+    )
+
+    ums_notation = db.Column(
+        db.Boolean,
+        default=False
+    )
+
+    # -----------------------------
+    # Audit Fields
+    # -----------------------------
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    modified_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    submitted_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    approved_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    is_active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True
+    )
+
+    # -----------------------------
+    # Notes
+    # -----------------------------
+    notes = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+       # relationships
+    project = db.relationship("ShipProject", backref="ga_inputs")
+    vessel = db.relationship("Vessel", backref="ga_inputs")
