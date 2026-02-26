@@ -147,3 +147,33 @@ class ShipProject(db.Model):
     deleted_at = db.Column(db.DateTime)
 
     is_deleted = db.Column(db.Boolean, default=False, nullable=False)
+
+class GAInputMaster(db.Model):
+    __tablename__ = "ga_input_master"
+
+    ga_input_id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    project_id = db.Column(UUID(as_uuid=True), db.ForeignKey("ship_projects.project_id"), nullable=False)
+    vessel_id = db.Column(UUID(as_uuid=True), db.ForeignKey("vessel.vessel_id"), nullable=False)
+
+    version_number = db.Column(db.Integer, nullable=False)
+    version_name = db.Column(db.String(50))
+
+    parent_version_id = db.Column(UUID(as_uuid=True), db.ForeignKey("ga_input_master.ga_input_id"))
+
+    version_status = db.Column(db.String(30), default="draft")
+    is_current_version = db.Column(db.Boolean, default=True)
+    is_locked = db.Column(db.Boolean, default=False)
+
+    generation_status = db.Column(db.String(30), default="not_generated")
+    generation_score = db.Column(db.Numeric(5,2))
+    validation_report = db.Column(db.JSON)
+
+    created_by = db.Column(UUID(as_uuid=True), nullable=False)
+    approved_by = db.Column(UUID(as_uuid=True))
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    approved_at = db.Column(db.DateTime)
+
+    is_deleted = db.Column(db.Boolean, default=False)
