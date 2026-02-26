@@ -10,27 +10,33 @@ import NewProject from "../pages/NewProject";
 import InputParameter from "../pages/InputParameter";
 import Login from "../pages/Login";
 import ProjectDetails from "../pages/ProjectDetails";
+import HullGeometry from "../pages/HullGeometry"; // 
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* ✅ Public Route (NO sidebar) */}
+      {/* ✅ Public Route */}
       <Route path="/login" element={<Login />} />
 
       {/* ✅ Protected Routes */}
       <Route element={<ProtectedRoute />}>
-
-        {/* 🔥 Wrap ALL protected pages with DashboardLayout */}
+        {/* 🔥 Dashboard Layout Wrapper */}
         <Route element={<DashboardLayout />}>
-
+          
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/new" element={<NewProject />} />
-          <Route path="/projects/:id/input" element={<InputParameter />} />
-          <Route path="/projects/:id" element={<ProjectDetails />} />
+          
+          {/* ✅ THE FIX: 
+              1. Changed :id to :projectId to match your component logic 
+              2. Added the Hull Geometry route
+          */}
+          <Route path="/projects/:projectId" element={<ProjectDetails />} />
+          <Route path="/projects/:projectId/parameters" element={<InputParameter />} />
+          <Route path="/projects/:projectId/hull-geometry" element={<HullGeometry />} />
 
         </Route>
       </Route>

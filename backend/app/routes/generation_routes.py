@@ -4,7 +4,7 @@ from app.services.rule_engine import RuleEngine
 from app.services.dxf_generator import DXFGenerator
 
 from app.db.models import AIGAOutput
-from app.db.models import GAInputMaster
+from app.db.models import GAInputMaster, HullGeometry
 from app.db.models import RuleMaster
 from app.db.database import db
 
