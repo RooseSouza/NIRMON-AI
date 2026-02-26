@@ -18,9 +18,6 @@ def create_ga_input_master():
         data = request.get_json()
         current_user = get_jwt_identity()
 
-        # -----------------------------
-        # Required Fields
-        # -----------------------------
         required_fields = [
             "project_id",
             "vessel_id",
@@ -57,17 +54,13 @@ def create_ga_input_master():
 
         new_version_number = (latest_version or 0) + 1
 
-        # -----------------------------
         # Set Previous Versions Inactive
-        # -----------------------------
         GAInputMaster.query.filter_by(
             project_id=uuid.UUID(data["project_id"]),
             is_current_version=True
         ).update({"is_current_version": False})
 
-        # -----------------------------
         # Create New Record
-        # -----------------------------
         new_record = GAInputMaster(
             ga_input_id=uuid.uuid4(),
 
@@ -147,37 +140,102 @@ def get_latest_ga_input(project_id):
     }), 200
 
 
-    #hull geometry 
+    # HULL GEOMETRY - ADVANCED
 @ga_input_bp.route("/<uuid:ga_input_id>/hull", methods=["POST"])
 @jwt_required()
 def create_hull(ga_input_id):
 
     data = request.get_json()
 
+    # Check GA Input exists
     ga_input = GAInputMaster.query.get(ga_input_id)
     if not ga_input:
         return jsonify({"error": "GA Input not found"}), 404
 
-    existing = HullGeometry.query.filter_by(ga_input_id=ga_input_id).first()
+    # Prevent duplicate hull
+    existing = HullGeometry.query.filter_by(
+        ga_input_id=ga_input_id
+    ).first()
+
     if existing:
         return jsonify({"error": "Hull already exists"}), 400
 
-    new_hull = HullGeometry(
-        ga_input_id=ga_input_id,
-        length_overall=data["length_overall"],
-        length_between_perpendiculars=data["length_between_perpendiculars"],
-        breadth_moulded=data["breadth_moulded"],
-        depth_moulded=data["depth_moulded"],
-        design_draft=data["design_draft"],
-        frame_spacing=data["frame_spacing"],
-        frame_numbering_origin=data["frame_numbering_origin"],
-        frame_numbering_direction=data["frame_numbering_direction"]
-    )
+    try:
+        new_hull = HullGeometry(
 
-    db.session.add(new_hull)
-    db.session.commit()
+            # =============================
+            # Principal Dimensions
+            # =============================
+            ga_input_id=ga_input_id,
+            length_overall=data["length_overall"],
+            length_between_perpendiculars=data["length_between_perpendiculars"],
+            breadth_moulded=data["breadth_moulded"],
+            depth_moulded=data["depth_moulded"],
+            design_draft=data["design_draft"],
+            baseline_z=data.get("baseline_z", 0.00),
+            centerline_y=data.get("centerline_y", 0.00),
 
-    return jsonify({"message": "Hull created"}), 201
+            # =============================
+            # Hydrostatic Coefficients
+            # =============================
+            block_coefficient=data["block_coefficient"],
+            prismatic_coefficient=data["prismatic_coefficient"],
+            midship_coefficient=data["midship_coefficient"],
+            waterplane_coefficient=data["waterplane_coefficient"],
+
+            # =============================
+            # Longitudinal Distribution
+            # =============================
+            parallel_midbody_length=data["parallel_midbody_length"],
+            entrance_length=data["entrance_length"],
+            run_length=data["run_length"],
+            bow_rake_angle=data.get("bow_rake_angle"),
+            stern_rake_angle=data.get("stern_rake_angle"),
+
+            # =============================
+            # Transverse Shape
+            # =============================
+            bilge_radius=data["bilge_radius"],
+            flare_angle=data.get("flare_angle"),
+            deadrise_angle=data.get("deadrise_angle"),
+
+            # =============================
+            # Bow / Stern Features
+            # =============================
+            bulbous_bow=data.get("bulbous_bow", False),
+            bulb_length=data.get("bulb_length"),
+            bulb_height=data.get("bulb_height"),
+            stern_type=data.get("stern_type"),
+            skeg_enabled=data.get("skeg_enabled", False),
+
+            # =============================
+            # Structural Grid
+            # =============================
+            frame_spacing=data["frame_spacing"],
+            frame_numbering_origin=data["frame_numbering_origin"],
+            frame_numbering_direction=data["frame_numbering_direction"],
+
+            # =============================
+            # Optional
+            # =============================
+            hull_form_type=data.get("hull_form_type"),
+            notes=data.get("notes")
+        )
+
+        db.session.add(new_hull)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Hull geometry created successfully",
+            "hull_geometry_id": str(new_hull.hull_geometry_id)
+        }), 201
+
+    except KeyError as e:
+        return jsonify({"error": f"Missing required field: {str(e)}"}), 400
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 @ga_input_bp.route("/<uuid:ga_input_id>", methods=["PUT"])
 @jwt_required()

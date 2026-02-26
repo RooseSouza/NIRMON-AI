@@ -203,53 +203,21 @@ class RuleMaster(db.Model):
 class GAInputMaster(db.Model):
     __tablename__ = "ga_input_master"
 
-    ga_input_id = db.Column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
-    )
+    ga_input_id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    project_id = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("ship_projects.project_id"),
-        nullable=False
-    )
+    project_id = db.Column(UUID(as_uuid=True), db.ForeignKey("ship_projects.project_id"), nullable=False)
 
-    vessel_id = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("vessel.vessel_id"),
-        nullable=False
-    )
+    vessel_id = db.Column(UUID(as_uuid=True), db.ForeignKey("vessel.vessel_id"), nullable=False)
 
-    created_by = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("users.user_id"),
-        nullable=False
-    )
+    created_by = db.Column(UUID(as_uuid=True), db.ForeignKey("users.user_id"), nullable=False)
 
-    modified_by = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("users.user_id"),
-        nullable=True
-    )
+    modified_by = db.Column(UUID(as_uuid=True), db.ForeignKey("users.user_id"), nullable=True)
 
-    submitted_by = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("users.user_id"),
-        nullable=True
-    )
+    submitted_by = db.Column(UUID(as_uuid=True), db.ForeignKey("users.user_id"), nullable=True)
 
-    approved_by = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("users.user_id"),
-        nullable=True
-    )
+    approved_by = db.Column(UUID(as_uuid=True), db.ForeignKey("users.user_id"), nullable=True)
 
-    version_number = db.Column(
-        db.Integer,
-        nullable=False,
-        default=1
-    )
+    version_number = db.Column(db.Integer, nullable=False, default=1)
 
     version_status = db.Column(
         Enum(
@@ -264,99 +232,41 @@ class GAInputMaster(db.Model):
         default="draft"
     )
 
-    is_current_version = db.Column(
-        db.Boolean,
-        nullable=False,
-        default=True
-    )
+    is_current_version = db.Column(db.Boolean, nullable=False, default=True)
 
-    regulatory_framework = db.Column(
-        db.String(50),
-        nullable=False
-    )
+    regulatory_framework = db.Column(db.String(50),nullable=False)
 
-    class_notation = db.Column(
-        db.String(100),
-        nullable=True
-    )
+    class_notation = db.Column(db.String(100),nullable=True)
 
-    gross_tonnage = db.Column(
-        db.Numeric(10, 2),
-        nullable=True
-    )
+    gross_tonnage = db.Column(db.Numeric(10, 2),nullable=True)
 
-    deadweight = db.Column(
-        db.Numeric(10, 2),
-        nullable=True
-    )
+    deadweight = db.Column(db.Numeric(10, 2),nullable=True)
 
-    crew_count = db.Column(
-        db.Integer,
-        nullable=False
-    )
+    crew_count = db.Column(db.Integer,nullable=False)
 
-    officer_count = db.Column(
-        db.Integer,
-        nullable=False
-    )
+    officer_count = db.Column(db.Integer, nullable=False)
 
-    rating_count = db.Column(
-        db.Integer,
-        nullable=False
-    )
+    rating_count = db.Column(db.Integer,nullable=False)
 
-    passenger_count = db.Column(
-        db.Integer,
-        nullable=True,
-        default=0
-    )
+    passenger_count = db.Column(db.Integer,nullable=True,default=0)
 
-    endurance_days = db.Column(
-        db.Numeric(5, 1),
-        nullable=False
-    )
+    endurance_days = db.Column(db.Numeric(5, 1),nullable=False)
 
-    voyage_duration_days = db.Column(
-        db.Numeric(5, 1),
-        nullable=True
-    )
+    voyage_duration_days = db.Column(db.Numeric(5, 1), nullable=True)
 
-    ums_notation = db.Column(
-        db.Boolean,
-        default=False
-    )
+    ums_notation = db.Column(db.Boolean,default=False)
 
-    created_at = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow
-    )
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    modified_at = db.Column(
-        db.DateTime,
-        nullable=True
-    )
+    modified_at = db.Column(db.DateTime, nullable=True)
 
-    submitted_at = db.Column(
-        db.DateTime,
-        nullable=True
-    )
+    submitted_at = db.Column(db.DateTime, nullable=True)
 
-    approved_at = db.Column(
-        db.DateTime,
-        nullable=True
-    )
+    approved_at = db.Column(db.DateTime, nullable=True)
 
-    is_active = db.Column(
-        db.Boolean,
-        nullable=False,
-        default=True
-    )
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
 
-    notes = db.Column(
-        db.Text,
-        nullable=True
-    )
+    notes = db.Column(db.Text, nullable=True)
 
        # relationships
     project = db.relationship("ShipProject", backref="ga_inputs")
@@ -365,57 +275,91 @@ class GAInputMaster(db.Model):
 class HullGeometry(db.Model):
     __tablename__ = "hull_geometry"
 
-    hull_geometry_id = db.Column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
-    )
+    hull_geometry_id = db.Column(UUID(as_uuid=True),
+                                 primary_key=True,
+                                 default=uuid.uuid4)
 
-    ga_input_id = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey("ga_input_master.ga_input_id"),
-        nullable=False,
-        unique=True  # ensures one-to-one
-    )
+    ga_input_id = db.Column(UUID(as_uuid=True),
+                            db.ForeignKey("ga_input_master.ga_input_id"),
+                            nullable=False,
+                            unique=True)
+
+    # =============================
+    # PRINCIPAL DIMENSIONS
+    # =============================
 
     length_overall = db.Column(db.Numeric(8, 2), nullable=False)
     length_between_perpendiculars = db.Column(db.Numeric(8, 2), nullable=False)
+
     breadth_moulded = db.Column(db.Numeric(7, 2), nullable=False)
     depth_moulded = db.Column(db.Numeric(6, 2), nullable=False)
     design_draft = db.Column(db.Numeric(6, 2), nullable=False)
 
-    baseline_z = db.Column(db.Numeric(6, 2), default=0.000)
+    baseline_z = db.Column(db.Numeric(6, 2), default=0.00)
+    centerline_y = db.Column(db.Numeric(4, 2), default=0.00)
+
+    # =============================
+    # HYDROSTATIC COEFFICIENTS
+    # =============================
+
+    block_coefficient = db.Column(db.Numeric(4, 3), nullable=False)
+    prismatic_coefficient = db.Column(db.Numeric(4, 3), nullable=False)
+    midship_coefficient = db.Column(db.Numeric(4, 3), nullable=False)
+    waterplane_coefficient = db.Column(db.Numeric(4, 3), nullable=False)
+
+    # =============================
+    # LONGITUDINAL SHAPE CONTROL
+    # =============================
+
+    parallel_midbody_length = db.Column(db.Numeric(6, 2))
+    entrance_length = db.Column(db.Numeric(6, 2))
+    run_length = db.Column(db.Numeric(6, 2))
+
+    bow_rake_angle = db.Column(db.Numeric(5, 2))   # degrees
+    stern_rake_angle = db.Column(db.Numeric(5, 2)) # degrees
+
+    # =============================
+    # TRANSVERSE SHAPE CONTROL
+    # =============================
+
+    bilge_radius = db.Column(db.Numeric(5, 2), nullable=False)
+    flare_angle = db.Column(db.Numeric(5, 2))
+    deadrise_angle = db.Column(db.Numeric(5, 2))
+
+    # =============================
+    # BOW / STERN FEATURES
+    # =============================
+
+    bulbous_bow = db.Column(db.Boolean, default=False)
+    bulb_length = db.Column(db.Numeric(5, 2))
+    bulb_height = db.Column(db.Numeric(5, 2))
+
+    stern_type = db.Column(db.String(30))  
+    # Values: TRANSOM, CRUISER, CANOE
+
+    skeg_enabled = db.Column(db.Boolean, default=False)
+
+    # =============================
+    # STRUCTURAL GRID
+    # =============================
+
     frame_spacing = db.Column(db.Numeric(6, 2), nullable=False)
+    frame_numbering_origin = db.Column(db.String(20), nullable=False)
+    frame_numbering_direction = db.Column(db.String(20), nullable=False)
 
-    frame_numbering_origin = db.Column(
-        db.String(20),
-        nullable=False
-        # Expected values: AP, FP, MIDSHIP
-    )
-
-    frame_numbering_direction = db.Column(
-        db.String(20),
-        nullable=False
-        # Expected values: FWD_TO_AFT, AFT_TO_FWD
-    )
-
-    centerline_y = db.Column(db.Numeric(4, 2), default=0.000)
+    # =============================
+    # META
+    # =============================
 
     hull_form_type = db.Column(db.String(30))
-    block_coefficient = db.Column(db.Numeric(4, 3))
-
     notes = db.Column(db.Text)
 
-    created_at = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow
-    )
+    created_at = db.Column(db.DateTime,
+                           nullable=False,
+                           default=datetime.utcnow)
 
-    modified_at = db.Column(
-        db.DateTime,
-        onupdate=datetime.utcnow
-    )
+    modified_at = db.Column(db.DateTime,
+                            onupdate=datetime.utcnow)
 
     ga_input = db.relationship(
         "GAInputMaster",
