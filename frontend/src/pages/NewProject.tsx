@@ -174,7 +174,7 @@ const NewProject: React.FC = () => {
             projectType: formData.projectType,
             clientName: formData.clientName,
             shipyardName: formData.shipyardName,
-            projectStatus: "Under Review",
+            projectStatus: "Active",
             targetDeliveryDate: targetDate ? targetDate.toISOString().split('T')[0] : null
         })
       });
@@ -312,11 +312,11 @@ const NewProject: React.FC = () => {
                 <div className="md:col-span-2 grid grid-cols-2 gap-12">
                     <div>
                         <label className="label">Start Date</label>
-                        <DatePicker selected={startDate} onChange={(date) => setStartDate(date)} dateFormat="dd/MM/yyyy" className="input w-full bg-gray-100 cursor-not-allowed" disabled />
+                        <DatePicker selected={startDate} onChange={(date: Date | null) => setStartDate(date)} dateFormat="dd/MM/yyyy" className="input w-full bg-gray-100 cursor-not-allowed" disabled />
                     </div>
                     <div>
                         <label className="label">Target Delivery Date <span className="text-red-500">*</span></label>
-                        <DatePicker selected={targetDate} onChange={(date) => setTargetDate(date)} dateFormat="dd/MM/yyyy" className="input w-full" placeholderText="Select Date" required />
+                        <DatePicker selected={targetDate} onChange={(date: Date | null) => setTargetDate(date)} dateFormat="dd/MM/yyyy" className="input w-full" placeholderText="Select Date" required />
                     </div>
                 </div>
 
