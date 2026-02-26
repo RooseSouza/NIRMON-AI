@@ -11,38 +11,33 @@ const InputParameter: React.FC = () => {
 
   // 🔄 DATABASE LOGIC: Fetch specific project details from API
   useEffect(() => {
+    console.log("🛠️ InputParameter Mounted. Project ID:", projectId);
+
     const fetchProjectDetails = async () => {
       const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
+
+      console.log("🔄 Fetching details for project:", projectId);
 
       try {
-        // Calling your backend endpoint for a single project
         const response = await fetch(`http://127.0.0.1:5000/api/projects/${projectId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (response.ok) {
           const data = await response.json();
-          // Assuming your API returns { project: { project_name: '...', ... } }
+          console.log("✅ Project Details Loaded:", data);
           setProjectDetails(data.project);
         } else {
-          console.error("Project not found in database");
+          console.error("❌ Failed to fetch project. Status:", response.status);
         }
       } catch (error) {
-        console.error("Error connecting to server:", error);
+        console.error("❌ API Error:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (projectId) {
-      fetchProjectDetails();
-    }
+    if (projectId) fetchProjectDetails();
   }, [projectId, navigate]);
 
   const [decks, setDecks] = useState<any[]>([

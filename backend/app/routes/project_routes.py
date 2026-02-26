@@ -38,7 +38,7 @@ def create_project():
         project_type=data["projectType"],
         client_name=data.get("clientName"),
         shipyard_name=data.get("shipyardName"),
-        project_status=data.get("projectStatus", "Under Review"),
+        project_status=data.get("projectStatus", "Active"),
         start_date=date.today(),
         target_delivery_date=data.get("targetDeliveryDate"),
         created_by=current_user_id
