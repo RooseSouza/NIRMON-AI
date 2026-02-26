@@ -151,18 +151,12 @@ class ShipProject(db.Model):
 class GAInputMaster(db.Model):
     __tablename__ = "ga_input_master"
 
-    # -----------------------------
-    # Primary Key
-    # -----------------------------
     ga_input_id = db.Column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4
     )
 
-    # -----------------------------
-    # Foreign Keys
-    # -----------------------------
     project_id = db.Column(
         UUID(as_uuid=True),
         db.ForeignKey("ship_projects.project_id"),
@@ -199,9 +193,6 @@ class GAInputMaster(db.Model):
         nullable=True
     )
 
-    # -----------------------------
-    # Versioning
-    # -----------------------------
     version_number = db.Column(
         db.Integer,
         nullable=False,
@@ -227,9 +218,6 @@ class GAInputMaster(db.Model):
         default=True
     )
 
-    # -----------------------------
-    # Regulatory & Vessel Info
-    # -----------------------------
     regulatory_framework = db.Column(
         db.String(50),
         nullable=False
@@ -250,9 +238,6 @@ class GAInputMaster(db.Model):
         nullable=True
     )
 
-    # -----------------------------
-    # Manning Details
-    # -----------------------------
     crew_count = db.Column(
         db.Integer,
         nullable=False
@@ -274,9 +259,6 @@ class GAInputMaster(db.Model):
         default=0
     )
 
-    # -----------------------------
-    # Operational Parameters
-    # -----------------------------
     endurance_days = db.Column(
         db.Numeric(5, 1),
         nullable=False
@@ -292,9 +274,6 @@ class GAInputMaster(db.Model):
         default=False
     )
 
-    # -----------------------------
-    # Audit Fields
-    # -----------------------------
     created_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -322,9 +301,6 @@ class GAInputMaster(db.Model):
         default=True
     )
 
-    # -----------------------------
-    # Notes
-    # -----------------------------
     notes = db.Column(
         db.Text,
         nullable=True
@@ -337,18 +313,12 @@ class GAInputMaster(db.Model):
 class HullGeometry(db.Model):
     __tablename__ = "hull_geometry"
 
-    # -----------------------------
-    # Primary Key
-    # -----------------------------
     hull_geometry_id = db.Column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4
     )
 
-    # -----------------------------
-    # One-to-One with GA Input
-    # -----------------------------
     ga_input_id = db.Column(
         UUID(as_uuid=True),
         db.ForeignKey("ga_input_master.ga_input_id"),
@@ -356,18 +326,12 @@ class HullGeometry(db.Model):
         unique=True  # ensures one-to-one
     )
 
-    # -----------------------------
-    # Principal Dimensions
-    # -----------------------------
     length_overall = db.Column(db.Numeric(8, 2), nullable=False)
     length_between_perpendiculars = db.Column(db.Numeric(8, 2), nullable=False)
     breadth_moulded = db.Column(db.Numeric(7, 2), nullable=False)
     depth_moulded = db.Column(db.Numeric(6, 2), nullable=False)
     design_draft = db.Column(db.Numeric(6, 2), nullable=False)
 
-    # -----------------------------
-    # Geometry Controls
-    # -----------------------------
     baseline_z = db.Column(db.Numeric(6, 2), default=0.000)
     frame_spacing = db.Column(db.Numeric(6, 2), nullable=False)
 
@@ -385,17 +349,11 @@ class HullGeometry(db.Model):
 
     centerline_y = db.Column(db.Numeric(4, 2), default=0.000)
 
-    # -----------------------------
-    # Hull Form Properties
-    # -----------------------------
     hull_form_type = db.Column(db.String(30))
     block_coefficient = db.Column(db.Numeric(4, 3))
 
     notes = db.Column(db.Text)
 
-    # -----------------------------
-    # Audit Fields
-    # -----------------------------
     created_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -407,9 +365,6 @@ class HullGeometry(db.Model):
         onupdate=datetime.utcnow
     )
 
-    # -----------------------------
-    # Relationship
-    # -----------------------------
     ga_input = db.relationship(
         "GAInputMaster",
         backref=db.backref("hull_geometry", uselist=False)

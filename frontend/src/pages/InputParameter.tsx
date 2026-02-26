@@ -62,16 +62,6 @@ const InputParameter: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    console.log("Saving to Database for Project:", id, formData);
-
-    setTimeout(() => {
-      setIsSaving(false);
-      alert("Technical parameters saved successfully!");
-    }, 1000);
-  };
-
   const handleNext = () => {
     navigate(`/projects/${id}/hull-geometry`);
   };
@@ -102,14 +92,6 @@ const InputParameter: React.FC = () => {
           </button>
 
           <div className="flex gap-4">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 bg-white border border-gray-200 px-6 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-            >
-              {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-              SAVE
-            </button>
 
             <button
               onClick={handleNext}
@@ -124,7 +106,7 @@ const InputParameter: React.FC = () => {
 
           <header>
             <h1 className="text-2xl font-bold text-gray-800">
-              Vessel Technical Parameters
+              GA Input Parameters
             </h1>
             <p className="text-sm text-gray-500">
               Project:{" "}
