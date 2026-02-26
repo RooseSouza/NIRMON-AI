@@ -9,7 +9,7 @@ const InputParameter: React.FC = () => {
   const [projectDetails, setProjectDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔄 DATABASE LOGIC: Fetch specific project details from API
+  //  DATABASE LOGIC: Fetch specific project details from API
   useEffect(() => {
     console.log("🛠️ InputParameter Mounted. Project ID:", id);
 
