@@ -150,7 +150,6 @@ class ShipProject(db.Model):
 
     is_deleted = db.Column(db.Boolean, default=False, nullable=False)
 
-<<<<<<< HEAD
 
 class AIGAOutput(db.Model):
      __tablename__ = "ai_ga_output"
@@ -201,7 +200,6 @@ class RuleMaster(db.Model):
     unit = db.Column(db.String(20))
     constraint_type = db.Column(db.String(10), nullable=False)
     status = db.Column(db.Boolean, default=True, nullable=False)
-=======
 class GAInputMaster(db.Model):
     __tablename__ = "ga_input_master"
 
@@ -387,4 +385,3 @@ class GAInputMaster(db.Model):
        # relationships
     project = db.relationship("ShipProject", backref="ga_inputs")
     vessel = db.relationship("Vessel", backref="ga_inputs")
->>>>>>> 91b34c8420ee2b1f1899bf074fc71d47dc3369f5
