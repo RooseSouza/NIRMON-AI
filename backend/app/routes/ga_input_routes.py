@@ -18,9 +18,6 @@ def create_ga_input_master():
         data = request.get_json()
         current_user = get_jwt_identity()
 
-        # -----------------------------
-        # Required Fields
-        # -----------------------------
         required_fields = [
             "project_id",
             "vessel_id",
@@ -57,17 +54,13 @@ def create_ga_input_master():
 
         new_version_number = (latest_version or 0) + 1
 
-        # -----------------------------
         # Set Previous Versions Inactive
-        # -----------------------------
         GAInputMaster.query.filter_by(
             project_id=uuid.UUID(data["project_id"]),
             is_current_version=True
         ).update({"is_current_version": False})
 
-        # -----------------------------
         # Create New Record
-        # -----------------------------
         new_record = GAInputMaster(
             ga_input_id=uuid.uuid4(),
 
