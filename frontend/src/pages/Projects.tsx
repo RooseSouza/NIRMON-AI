@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Search } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Plus, Search, Filter } from "lucide-react";
 import ProjectCard from "../components/project/ProjectCard";
 
-// Interface matching your API response
 interface Project {
   project_id: string;
   project_name: string;
@@ -14,13 +13,23 @@ interface Project {
 
 const Projects: React.FC = () => {
   const navigate = useNavigate();
-
+  const [searchParams] = useSearchParams(); // Read URL params
+  
   const [projects, setProjects] = useState<Project[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All"); // Default filter
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 🔄 Fetch Projects from Backend API
+  // Load Filter from URL on Mount (e.g. ?status=Active)
+  useEffect(() => {
+    const statusParam = searchParams.get("status");
+    if (statusParam) {
+      setStatusFilter(statusParam);
+    }
+  }, [searchParams]);
+
+  // Fetch Projects
   useEffect(() => {
     const fetchProjects = async () => {
       const token = localStorage.getItem("token");
@@ -31,19 +40,17 @@ const Projects: React.FC = () => {
       }
 
       try {
-        setLoading(true);
+        const response = await fetch("http://127.0.0.1:5000/api/projects/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        const response = await fetch(
-          "http://127.0.0.1:5000/api/projects/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch projects");
+        if (response.ok) {
+          const data = await response.json();
+          // Sort Newest First
+          const sortedProjects = (data.projects || []).sort((a: Project, b: Project) => {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+          setProjects(sortedProjects);
         }
 
         const data = await response.json();
@@ -67,21 +74,22 @@ const Projects: React.FC = () => {
     fetchProjects();
   }, [navigate]);
 
-  // 🔎 Search filter
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.project_name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      project.project_code
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-  );
+  // 🔎 Combined Filter Logic (Search + Status)
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch =
+      project.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.project_code.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "All" || project.project_status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="w-full min-h-screen flex flex-col px-8 py-8 bg-gray-50">
 
-      {/* ================= HEADER ================= */}
+      {/* HEADER */}
       <div className="flex justify-between items-end mb-8 border-b border-gray-200 pb-6">
 
         <div>
@@ -94,8 +102,26 @@ const Projects: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          
+          {/* Status Filter Dropdown */}
+          <div className="relative group">
+            <Filter size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none cursor-pointer hover:bg-gray-50"
+            >
+              <option value="All">All</option>
+              <option value="Draft">Draft</option>
+              <option value="Active">Active</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Approved">Approved</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
 
-          {/* 🔎 Search */}
+          {/* Search Bar */}
           <div className="relative">
             <Search
               size={18}
@@ -110,7 +136,7 @@ const Projects: React.FC = () => {
             />
           </div>
 
-          {/* ➕ New Project */}
+          {/* New Project Button */}
           <button
             onClick={() => navigate("/projects/new")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#465FFF] to-[#5A6BFF] text-white text-sm font-semibold shadow-md hover:from-[#3548F5] hover:to-[#4B5CFF] hover:shadow-lg transition-all duration-300"
@@ -122,7 +148,7 @@ const Projects: React.FC = () => {
         </div>
       </div>
 
-      {/* ================= CONTENT ================= */}
+      {/* CONTENT */}
       <div className="flex-1">
 
         {loading ? (
@@ -137,9 +163,15 @@ const Projects: React.FC = () => {
 
         ) : filteredProjects.length === 0 ? (
           <div className="w-full h-72 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-500 bg-white">
-            <p className="text-lg font-medium uppercase">
-              No Projects Found
-            </p>
+            <p className="text-lg font-medium uppercase">No Projects Found</p>
+            {statusFilter !== "All" && (
+              <button 
+                onClick={() => setStatusFilter("All")}
+                className="mt-4 text-blue-600 hover:underline text-sm font-medium"
+              >
+                Clear Filter
+              </button>
+            )}
           </div>
 
         ) : (

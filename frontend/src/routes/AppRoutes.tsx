@@ -2,47 +2,38 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import ProtectedRoute from "./ProtectedRoute";
+import DashboardLayout from "../components/layout/DashboardLayout";
 
 import Dashboard from "../pages/Dashboard";
 import Projects from "../pages/Projects";
 import NewProject from "../pages/NewProject";
 import InputParameter from "../pages/InputParameter";
 import Login from "../pages/Login";
-import Users from "../pages/Users";
-import ProjectDetails from "../pages/ProjectDetails";
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* 1️⃣ Public Route */}
+      {/* ✅ Public Route (NO sidebar) */}
       <Route path="/login" element={<Login />} />
 
-      {/* 2️⃣ Protected Routes - Everything inside here requires Login */}
+      {/* ✅ Protected Routes */}
       <Route element={<ProtectedRoute />}>
-        
-        {/* Default redirect to Dashboard */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        {/* Main Pages */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/projects" element={<Projects />} />
-        <Route path="/users" element={<Users />} />
+        {/* 🔥 Wrap ALL protected pages with DashboardLayout */}
+        <Route element={<DashboardLayout />}>
 
-        {/* Project Creation Flow */}
-        <Route path="/projects/new" element={<NewProject />} />
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        {/* ✅ STEP 1: Project Details (The page that shows Ship Info) */}
-        <Route path="/projects/:projectId" element={<ProjectDetails />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/new" element={<NewProject />} />
+          <Route path="/projects/:id/input" element={<InputParameter />} />
 
-        {/* ✅ STEP 2: Input Parameters (The page for Decks/Dimensions) */}
-        <Route 
-          path="/projects/:projectId/parameters" 
-          element={<InputParameter />} 
-        />
-
+        </Route>
       </Route>
 
-      {/* 3️⃣ Fallback - If route doesn't exist, go to dashboard */}
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
