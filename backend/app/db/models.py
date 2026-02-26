@@ -108,6 +108,7 @@ class Vessel(db.Model):
         CheckConstraint('displacement >= 0', name='check_displacement_positive'),
         CheckConstraint('design_speed >= 0', name='check_speed_positive'),
     )
+    projects = db.relationship("ShipProject", backref="vessel", lazy=True)
 
 
 class ShipProject(db.Model):
