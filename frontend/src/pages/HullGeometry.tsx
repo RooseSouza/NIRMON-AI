@@ -1,9 +1,9 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Box, LayoutGrid, Ship, database as DbIcon } from "lucide-react";
+import { ArrowLeft, Box, LayoutGrid, Ship, Database as DbIcon } from "lucide-react";
 
 const HullGeometry: React.FC = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
 
   return (
@@ -25,7 +25,7 @@ const HullGeometry: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Hull Geometry & Offset Table</h1>
           <p className="text-gray-500 mb-2">Configure the 3D form and station data for your vessel.</p>
           <div className="inline-block px-4 py-1 bg-gray-100 rounded-full text-xs font-mono text-gray-500 mb-10">
-            Project ID: {projectId}
+            Project ID: {id}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
