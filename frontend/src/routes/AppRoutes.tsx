@@ -34,9 +34,9 @@ const AppRoutes: React.FC = () => {
               1. Changed :id to :projectId to match your component logic 
               2. Added the Hull Geometry route
           */}
-          <Route path="/projects/:projectId" element={<ProjectDetails />} />
-          <Route path="/projects/:projectId/parameters" element={<InputParameter />} />
-          <Route path="/projects/:projectId/hull-geometry" element={<HullGeometry />} />
+          <Route path="/projects/:id" element={<ProjectDetails />} />
+          <Route path="/projects/:id/input" element={<InputParameter />} />
+          <Route path="/projects/:id/hull-geometry" element={<HullGeometry />} />
 
         </Route>
       </Route>
