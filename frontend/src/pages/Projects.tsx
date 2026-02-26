@@ -19,6 +19,7 @@ const Projects: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All"); // Default filter
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   // Load Filter from URL on Mount (e.g. ?status=Active)
   useEffect(() => {
@@ -32,7 +33,11 @@ const Projects: React.FC = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
       try {
         const response = await fetch("http://127.0.0.1:5000/api/projects/", {
@@ -47,15 +52,27 @@ const Projects: React.FC = () => {
           });
           setProjects(sortedProjects);
         }
-      } catch (error) {
-        console.error("Error connecting to server:", error);
+
+        const data = await response.json();
+
+        // Sort newest first
+        const sortedProjects = (data.projects || []).sort(
+          (a: Project, b: Project) =>
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+        );
+
+        setProjects(sortedProjects);
+      } catch (err: any) {
+        console.error("Project Fetch Error:", err);
+        setError("Unable to load projects.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjects();
-  }, []);
+  }, [navigate]);
 
   // 🔎 Combined Filter Logic (Search + Status)
   const filteredProjects = projects.filter((project) => {
@@ -74,6 +91,7 @@ const Projects: React.FC = () => {
 
       {/* HEADER */}
       <div className="flex justify-between items-end mb-8 border-b border-gray-200 pb-6">
+
         <div>
           <h1 className="text-3xl font-bold text-gray-800 uppercase tracking-wide">
             Projects
@@ -105,7 +123,10 @@ const Projects: React.FC = () => {
 
           {/* Search Bar */}
           <div className="relative">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type="text"
               placeholder="Search Projects..."
@@ -123,15 +144,23 @@ const Projects: React.FC = () => {
             <Plus size={18} />
             New Project
           </button>
+
         </div>
       </div>
 
       {/* CONTENT */}
       <div className="flex-1">
+
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
+
+        ) : error ? (
+          <div className="text-red-500 text-center mt-10">
+            {error}
+          </div>
+
         ) : filteredProjects.length === 0 ? (
           <div className="w-full h-72 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-500 bg-white">
             <p className="text-lg font-medium uppercase">No Projects Found</p>
@@ -144,8 +173,10 @@ const Projects: React.FC = () => {
               </button>
             )}
           </div>
+
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
             {filteredProjects.map((project) => (
               <ProjectCard
                 key={project.project_id}
@@ -153,8 +184,12 @@ const Projects: React.FC = () => {
                 projectCode={project.project_code}
                 projectName={project.project_name}
                 projectStatus={project.project_status}
+                onClick={() =>
+                  navigate(`/projects/${project.project_id}`)
+                }
               />
             ))}
+
           </div>
         )}
       </div>

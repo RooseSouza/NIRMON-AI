@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Ship } from 'lucide-react';
 
 interface ProjectCardProps {
-  id: string;
+  id: string; // This must be the project_id from your Neon DB
   projectCode: string;
   projectName: string;
   projectStatus: string;
