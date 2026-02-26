@@ -275,33 +275,93 @@ class GAInputMaster(db.Model):
 class HullGeometry(db.Model):
     __tablename__ = "hull_geometry"
 
-    hull_geometry_id = db.Column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
-    )
-    ga_input_id = db.Column(UUID(as_uuid=True), db.ForeignKey("ga_input_master.ga_input_id"), nullable=False, unique=True  # ensures one-to-one
-    )
+    hull_geometry_id = db.Column(UUID(as_uuid=True),
+                                 primary_key=True,
+                                 default=uuid.uuid4)
+
+    ga_input_id = db.Column(UUID(as_uuid=True),
+                            db.ForeignKey("ga_input_master.ga_input_id"),
+                            nullable=False,
+                            unique=True)
+
+    # =============================
+    # PRINCIPAL DIMENSIONS
+    # =============================
+
     length_overall = db.Column(db.Numeric(8, 2), nullable=False)
     length_between_perpendiculars = db.Column(db.Numeric(8, 2), nullable=False)
+
     breadth_moulded = db.Column(db.Numeric(7, 2), nullable=False)
     depth_moulded = db.Column(db.Numeric(6, 2), nullable=False)
     design_draft = db.Column(db.Numeric(6, 2), nullable=False)
 
-    baseline_z = db.Column(db.Numeric(6, 2), default=0.000)
-    frame_spacing = db.Column(db.Numeric(6, 2), nullable=False)
+    baseline_z = db.Column(db.Numeric(6, 2), default=0.00)
+    centerline_y = db.Column(db.Numeric(4, 2), default=0.00)
 
-    frame_numbering_origin = db.Column( db.String(20), nullable=False)# Expected values: AP, FP, MIDSHIP
-    frame_numbering_direction = db.Column(db.String(20), nullable=False) # Expected values: FWD_TO_AFT, AFT_TO_FWD
-    centerline_y = db.Column(db.Numeric(4, 2), default=0.000)
+    # =============================
+    # HYDROSTATIC COEFFICIENTS
+    # =============================
+
+    block_coefficient = db.Column(db.Numeric(4, 3), nullable=False)
+    prismatic_coefficient = db.Column(db.Numeric(4, 3), nullable=False)
+    midship_coefficient = db.Column(db.Numeric(4, 3), nullable=False)
+    waterplane_coefficient = db.Column(db.Numeric(4, 3), nullable=False)
+
+    # =============================
+    # LONGITUDINAL SHAPE CONTROL
+    # =============================
+
+    parallel_midbody_length = db.Column(db.Numeric(6, 2))
+    entrance_length = db.Column(db.Numeric(6, 2))
+    run_length = db.Column(db.Numeric(6, 2))
+
+    bow_rake_angle = db.Column(db.Numeric(5, 2))   # degrees
+    stern_rake_angle = db.Column(db.Numeric(5, 2)) # degrees
+
+    # =============================
+    # TRANSVERSE SHAPE CONTROL
+    # =============================
+
+    bilge_radius = db.Column(db.Numeric(5, 2), nullable=False)
+    flare_angle = db.Column(db.Numeric(5, 2))
+    deadrise_angle = db.Column(db.Numeric(5, 2))
+
+    # =============================
+    # BOW / STERN FEATURES
+    # =============================
+
+    bulbous_bow = db.Column(db.Boolean, default=False)
+    bulb_length = db.Column(db.Numeric(5, 2))
+    bulb_height = db.Column(db.Numeric(5, 2))
+
+    stern_type = db.Column(db.String(30))  
+    # Values: TRANSOM, CRUISER, CANOE
+
+    skeg_enabled = db.Column(db.Boolean, default=False)
+
+    # =============================
+    # STRUCTURAL GRID
+    # =============================
+
+    frame_spacing = db.Column(db.Numeric(6, 2), nullable=False)
+    frame_numbering_origin = db.Column(db.String(20), nullable=False)
+    frame_numbering_direction = db.Column(db.String(20), nullable=False)
+
+    # =============================
+    # META
+    # =============================
 
     hull_form_type = db.Column(db.String(30))
-    block_coefficient = db.Column(db.Numeric(4, 3))
-
     notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    modified_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime,
+                           nullable=False,
+                           default=datetime.utcnow)
 
-    ga_input = db.relationship("GAInputMaster", backref=db.backref("hull_geometry", uselist=False)
+    modified_at = db.Column(db.DateTime,
+                            onupdate=datetime.utcnow)
+
+    ga_input = db.relationship(
+        "GAInputMaster",
+        backref=db.backref("hull_geometry", uselist=False)
     )

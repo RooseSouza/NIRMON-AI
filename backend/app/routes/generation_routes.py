@@ -20,7 +20,6 @@ def generate_ga():
     if not ga_input_id:
         return jsonify({"error": "ga_input_id is required"}), 400
 
-    # 1️⃣ Fetch GA Input
     ga_input = GAInputMaster.query.filter_by(
         ga_input_id=ga_input_id,
         is_active=True
@@ -29,7 +28,6 @@ def generate_ga():
     if not ga_input:
         return jsonify({"error": "GA Input not found"}), 404
 
-    # 2️⃣ Fetch Hull Geometry
     hull = HullGeometry.query.filter_by(
         ga_input_id=ga_input_id
     ).first()
@@ -37,10 +35,8 @@ def generate_ga():
     if not hull:
         return jsonify({"error": "Hull geometry not found"}), 404
 
-    # Build internal geometry model
     geometry_model = HullGeometryBuilder.build(hull)
 
-    # 🔹 Generate DXF file
     dxf_generator = DXFGenerator()
     file_path = dxf_generator.generate(geometry_model, "hull_output.dxf")
 
@@ -49,5 +45,9 @@ def generate_ga():
     return jsonify({
         "status": "success",
         "geometry_model": geometry_model.to_dict(),
+        "hull_parameters": {
+            column.name: getattr(hull, column.name)
+            for column in hull.__table__.columns
+        },
         "file_path": file_path
-    })
+    }), 200
