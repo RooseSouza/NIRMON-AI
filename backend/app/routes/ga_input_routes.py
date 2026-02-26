@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
 from app.db.database import db
 from app.db.models import GAInputMaster
+from app.db.models import HullGeometry
 import uuid
 from datetime import datetime
 
@@ -114,3 +115,36 @@ def create_ga_input_master():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+
+    #hull geometry 
+@ga_input_bp.route("/<uuid:ga_input_id>/hull", methods=["POST"])
+@jwt_required()
+def create_hull(ga_input_id):
+
+    data = request.get_json()
+
+    ga_input = GAInputMaster.query.get(ga_input_id)
+    if not ga_input:
+        return jsonify({"error": "GA Input not found"}), 404
+
+    existing = HullGeometry.query.filter_by(ga_input_id=ga_input_id).first()
+    if existing:
+        return jsonify({"error": "Hull already exists"}), 400
+
+    new_hull = HullGeometry(
+        ga_input_id=ga_input_id,
+        length_overall=data["length_overall"],
+        length_between_perpendiculars=data["length_between_perpendiculars"],
+        breadth_moulded=data["breadth_moulded"],
+        depth_moulded=data["depth_moulded"],
+        design_draft=data["design_draft"],
+        frame_spacing=data["frame_spacing"],
+        frame_numbering_origin=data["frame_numbering_origin"],
+        frame_numbering_direction=data["frame_numbering_direction"]
+    )
+
+    db.session.add(new_hull)
+    db.session.commit()
+
+    return jsonify({"message": "Hull created"}), 201

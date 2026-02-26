@@ -333,3 +333,84 @@ class GAInputMaster(db.Model):
        # relationships
     project = db.relationship("ShipProject", backref="ga_inputs")
     vessel = db.relationship("Vessel", backref="ga_inputs")
+
+class HullGeometry(db.Model):
+    __tablename__ = "hull_geometry"
+
+    # -----------------------------
+    # Primary Key
+    # -----------------------------
+    hull_geometry_id = db.Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
+
+    # -----------------------------
+    # One-to-One with GA Input
+    # -----------------------------
+    ga_input_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("ga_input_master.ga_input_id"),
+        nullable=False,
+        unique=True  # ensures one-to-one
+    )
+
+    # -----------------------------
+    # Principal Dimensions
+    # -----------------------------
+    length_overall = db.Column(db.Numeric(8, 2), nullable=False)
+    length_between_perpendiculars = db.Column(db.Numeric(8, 2), nullable=False)
+    breadth_moulded = db.Column(db.Numeric(7, 2), nullable=False)
+    depth_moulded = db.Column(db.Numeric(6, 2), nullable=False)
+    design_draft = db.Column(db.Numeric(6, 2), nullable=False)
+
+    # -----------------------------
+    # Geometry Controls
+    # -----------------------------
+    baseline_z = db.Column(db.Numeric(6, 2), default=0.000)
+    frame_spacing = db.Column(db.Numeric(6, 2), nullable=False)
+
+    frame_numbering_origin = db.Column(
+        db.String(20),
+        nullable=False
+        # Expected values: AP, FP, MIDSHIP
+    )
+
+    frame_numbering_direction = db.Column(
+        db.String(20),
+        nullable=False
+        # Expected values: FWD_TO_AFT, AFT_TO_FWD
+    )
+
+    centerline_y = db.Column(db.Numeric(4, 2), default=0.000)
+
+    # -----------------------------
+    # Hull Form Properties
+    # -----------------------------
+    hull_form_type = db.Column(db.String(30))
+    block_coefficient = db.Column(db.Numeric(4, 3))
+
+    notes = db.Column(db.Text)
+
+    # -----------------------------
+    # Audit Fields
+    # -----------------------------
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    modified_at = db.Column(
+        db.DateTime,
+        onupdate=datetime.utcnow
+    )
+
+    # -----------------------------
+    # Relationship
+    # -----------------------------
+    ga_input = db.relationship(
+        "GAInputMaster",
+        backref=db.backref("hull_geometry", uselist=False)
+    )
