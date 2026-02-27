@@ -1,14 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-// Icons (OLD ONES)
-import { GridIcon, CalenderIcon } from "../icons";
-
 // Context
 import { useSidebar } from "../../context/SidebarContext";
 
-// Logo
+// Logos
 import logo from "../../assets/nirmon-logo.png";
+import logoSmall from "../../assets/nirmon-logo-small.png";
+
+// Icons
+import { GridIcon, CalenderIcon } from "../icons"; // Assuming these are your custom icons
 
 interface Module {
   module_id: string;
@@ -32,16 +33,8 @@ const AppSidebar: React.FC = () => {
 
   const isActive = useCallback(
     (path: string) => {
-      // Dashboard exact match
-      if (path === "/dashboard") {
-        return location.pathname === "/dashboard";
-      }
-
-      // Projects & all sub routes
-      if (path === "/projects") {
-        return location.pathname.startsWith("/projects");
-      }
-
+      if (path === "/dashboard") return location.pathname === "/dashboard";
+      if (path === "/projects") return location.pathname.startsWith("/projects");
       return false;
     },
     [location.pathname]
@@ -50,7 +43,6 @@ const AppSidebar: React.FC = () => {
   const generatePath = (name: string) =>
     `/${name.toLowerCase().replace(/\s+/g, "-")}`;
 
-  // 🔥 ICON MAPPER
   const getIcon = (name: string) => {
     switch (name.toLowerCase()) {
       case "dashboard":
@@ -62,6 +54,8 @@ const AppSidebar: React.FC = () => {
     }
   };
 
+  const showFullContent = isExpanded || isHovered || isMobileOpen;
+
   return (
     <aside
       className={`fixed top-0 flex flex-col px-5 left-0 
@@ -69,9 +63,7 @@ const AppSidebar: React.FC = () => {
       text-gray-900 h-screen transition-all duration-300 
       ease-in-out z-50 border-r border-gray-200 
       ${
-        isExpanded || isMobileOpen
-          ? "w-[260px]"
-          : isHovered
+        showFullContent
           ? "w-[260px]"
           : "w-[90px]"
       }
@@ -80,22 +72,28 @@ const AppSidebar: React.FC = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* LOGO */}
+      {/* LOGO SECTION */}
       <div
         className={`py-8 flex ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+          !showFullContent ? "lg:justify-center" : "justify-start"
         }`}
       >
         <Link to="/dashboard">
-          <img
-            src={logo}
-            alt="Nirmon Logo"
-            className={`object-contain transition-all duration-300 ${
-              isExpanded || isHovered || isMobileOpen
-                ? "h-10 w-auto"
-                : "h-8 w-8"
-            }`}
-          />
+          {showFullContent ? (
+            // Full Logo
+            <img
+              src={logo}
+              alt="Nirmon Logo"
+              className="h-10 w-auto object-contain transition-all duration-300"
+            />
+          ) : (
+            // Small Logo
+            <img
+              src={logoSmall}
+              alt="Logo Small"
+              className="h-8 w-8 object-contain transition-all duration-300"
+            />
+          )}
         </Link>
       </div>
 
@@ -108,7 +106,7 @@ const AppSidebar: React.FC = () => {
 
               return (
                 <li key={module.module_id}>
-                  {/* Parent */}
+                  {/* Parent Link */}
                   <Link
                     to={path}
                     className={`menu-item group ${
@@ -116,7 +114,7 @@ const AppSidebar: React.FC = () => {
                         ? "menu-item-active"
                         : "menu-item-inactive"
                     } ${
-                      !isExpanded && !isHovered
+                      !showFullContent
                         ? "lg:justify-center"
                         : "lg:justify-start"
                     }`}
@@ -126,17 +124,18 @@ const AppSidebar: React.FC = () => {
                       {getIcon(module.module_name)}
                     </span>
 
-                    {(isExpanded || isHovered || isMobileOpen) && (
+                    {/* TEXT */}
+                    {showFullContent && (
                       <span className="menu-item-text">
                         {module.module_name}
                       </span>
                     )}
                   </Link>
 
-                  {/* Children */}
+                  {/* Children Links */}
                   {module.children &&
                     module.children.length > 0 &&
-                    (isExpanded || isHovered || isMobileOpen) && (
+                    showFullContent && (
                       <ul className="ml-6 mt-2 space-y-2">
                         {module.children.map((child) => {
                           const childPath = generatePath(child.module_name);
