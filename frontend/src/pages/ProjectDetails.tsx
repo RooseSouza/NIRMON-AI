@@ -1,21 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Ship, Calendar, User, Anchor, Edit, Plus, Loader2, Lock } from "lucide-react";
+import {
+  ArrowLeft,
+  Ship,
+  Calendar,
+  User,
+  Anchor,
+  Edit,
+  Plus,
+  Loader2,
+  Lock,
+} from "lucide-react";
 
 const ProjectDetails: React.FC = () => {
   const { id } = useParams(); // Catches the UUID from the URL
   const navigate = useNavigate();
-  
+
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState<any>({});
+
   // New State: Check if parameters already exist
   const [hasGaInput, setHasGaInput] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
-      
+
       try {
         // 1. Fetch Project Details
         const projectRes = await fetch(
@@ -34,18 +47,17 @@ const ProjectDetails: React.FC = () => {
 
         // 2. Check if GA Inputs exist (to toggle Edit/Add button)
         const gaRes = await fetch(
-            `http://127.0.0.1:5000/api/gainputs/project/${id}/latest`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
+          `http://127.0.0.1:5000/api/gainputs/project/${id}/latest`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
         );
 
         if (gaRes.ok) {
-            setHasGaInput(true); // Data exists -> Edit Mode
+          setHasGaInput(true); // Data exists -> Edit Mode
         } else {
-            setHasGaInput(false); // 404 -> Add Mode
+          setHasGaInput(false); // 404 -> Add Mode
         }
-
       } catch (error) {
         console.error("API Error:", error);
       } finally {
@@ -55,6 +67,20 @@ const ProjectDetails: React.FC = () => {
 
     if (id) fetchData();
   }, [id]);
+
+  useEffect(() => {
+  if (project) {
+    setEditData({
+      project_name: project.project_name,
+      project_code: project.project_code,
+      client_name: project.client_name,
+      shipyard_name: project.shipyard_name,
+      project_status: project.project_status,
+      start_date: project.start_date?.split("T")[0],
+      target_delivery_date: project.target_delivery_date?.split("T")[0],
+    });
+  }
+}, [project]);
 
   if (loading)
     return (
@@ -72,30 +98,83 @@ const ProjectDetails: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active": return "text-green-600";
-      case "Draft": return "text-gray-500";
-      case "Under Review": return "text-yellow-600";
-      case "Approved": return "text-blue-600";
-      case "Completed": return "text-purple-600";
-      case "Cancelled": return "text-red-600";
-      default: return "text-gray-600";
+      case "Active":
+        return "text-green-600";
+      case "Draft":
+        return "text-gray-500";
+      case "Under Review":
+        return "text-yellow-600";
+      case "Approved":
+        return "text-blue-600";
+      case "Completed":
+        return "text-purple-600";
+      case "Cancelled":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
     }
   };
 
   const getStatusDotColor = (status: string) => {
     switch (status) {
-      case "Active": return "bg-green-500";
-      case "Draft": return "bg-gray-400";
-      case "Under Review": return "bg-yellow-500";
-      case "Approved": return "bg-blue-500";
-      case "Completed": return "bg-purple-500";
-      case "Cancelled": return "bg-red-500";
-      default: return "bg-gray-400";
+      case "Active":
+        return "bg-green-500";
+      case "Draft":
+        return "bg-gray-400";
+      case "Under Review":
+        return "bg-yellow-500";
+      case "Approved":
+        return "bg-blue-500";
+      case "Completed":
+        return "bg-purple-500";
+      case "Cancelled":
+        return "bg-red-500";
+      default:
+        return "bg-gray-400";
     }
   };
 
+const handleUpdateProject = async () => {
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:5000/api/projects/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editData),
+      }
+    );
+
+    if (response.ok) {
+      setProject({ ...project, ...editData });
+      setIsEditing(false);
+    } else {
+      console.error("Failed to update");
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   // Logic to lock the project
   const isUnderReview = project.project_status === "Under Review";
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "---";
+
+    const date = new Date(dateString);
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
@@ -109,7 +188,13 @@ const ProjectDetails: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Side: Project Info Card */}
-        <div className="md:col-span-1 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        <div className="md:col-span-1 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 relative">
+          <button
+            onClick={() => setIsEditing(true)}
+            className="absolute top-6 right-6 p-2 rounded-lg hover:bg-gray-100 transition"
+          >
+            <Edit size={16} className="text-gray-500" />
+          </button>
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-blue-50 rounded-lg">
               <Ship className="text-blue-600" size={24} />
@@ -208,7 +293,7 @@ const ProjectDetails: React.FC = () => {
                       Start Date
                     </label>
                     <p className="text-sm font-medium">
-                      {project.start_date || "---"}
+                      {formatDate(project.start_date)}
                     </p>
                   </div>
                 </div>
@@ -220,7 +305,7 @@ const ProjectDetails: React.FC = () => {
                       Target Delivery
                     </label>
                     <p className="text-sm font-medium">
-                      {project.target_delivery_date || "---"}
+                      {formatDate(project.target_delivery_date)}
                     </p>
                   </div>
                 </div>
@@ -230,7 +315,6 @@ const ProjectDetails: React.FC = () => {
 
           {/* Action Button Container */}
           <div className="relative group w-full mt-10">
-            
             {/* Floating Message (Tooltip) */}
             {isUnderReview && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-max px-3 py-2 bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
@@ -241,11 +325,14 @@ const ProjectDetails: React.FC = () => {
 
             {/* Main Button */}
             <button
-              onClick={() => !isUnderReview && navigate(`/projects/${id}/input`)}
+              onClick={() =>
+                !isUnderReview && navigate(`/projects/${id}/input`)
+              }
               disabled={isUnderReview}
               className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 
-                ${isUnderReview 
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200" 
+                ${
+                  isUnderReview
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                     : "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
                 }`}
             >
@@ -267,17 +354,103 @@ const ProjectDetails: React.FC = () => {
               )}
             </button>
           </div>
-
         </div>
 
         {/* Right Side: Empty Box */}
         <div className="md:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400">
           <div className="text-center">
-             <Ship className="w-16 h-16 mx-auto mb-4 text-gray-200" />
-             <p className="font-semibold">GA Model Viewer Placeholder</p>
+            <Ship className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+            <p className="font-semibold">GA Model Viewer Placeholder</p>
           </div>
         </div>
       </div>
+      {isEditing && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    
+    <div className="bg-white w-full max-w-xl p-8 rounded-2xl shadow-2xl border border-gray-100 relative">
+      
+      <h2 className="text-xl font-bold mb-6">Edit Project</h2>
+
+      <div className="space-y-4">
+
+        <input
+          type="text"
+          value={editData.project_name}
+          onChange={(e) =>
+            setEditData({ ...editData, project_name: e.target.value })
+          }
+          className="w-full border p-3 rounded-lg"
+          placeholder="Project Name"
+        />
+
+        <input
+          type="text"
+          value={editData.project_code}
+          onChange={(e) =>
+            setEditData({ ...editData, project_code: e.target.value })
+          }
+          className="w-full border p-3 rounded-lg"
+          placeholder="Project Code"
+        />
+
+        <input
+          type="text"
+          value={editData.client_name}
+          onChange={(e) =>
+            setEditData({ ...editData, client_name: e.target.value })
+          }
+          className="w-full border p-3 rounded-lg"
+          placeholder="Client Name"
+        />
+
+        <input
+          type="text"
+          value={editData.shipyard_name}
+          onChange={(e) =>
+            setEditData({ ...editData, shipyard_name: e.target.value })
+          }
+          className="w-full border p-3 rounded-lg"
+          placeholder="Shipyard Name"
+        />
+
+        <input
+          type="date"
+          value={editData.start_date}
+          onChange={(e) =>
+            setEditData({ ...editData, start_date: e.target.value })
+          }
+          className="w-full border p-3 rounded-lg"
+        />
+
+        <input
+          type="date"
+          value={editData.target_delivery_date}
+          onChange={(e) =>
+            setEditData({ ...editData, target_delivery_date: e.target.value })
+          }
+          className="w-full border p-3 rounded-lg"
+        />
+
+      </div>
+
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setIsEditing(false)}
+          className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleUpdateProject}
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+        >
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
