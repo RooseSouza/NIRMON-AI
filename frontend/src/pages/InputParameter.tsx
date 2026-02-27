@@ -1,45 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Users, ShieldCheck, ChevronRight, Anchor, Loader2 } from 'lucide-react';
 
 const InputParameter: React.FC = () => {
-  const { id } = useParams();
+  // Use 'projectId' to match the route we defined in AppRoutes
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-
   const [isSaving, setIsSaving] = useState(false);
-  const [projectDetails, setProjectDetails] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  // ================= FETCH PROJECT =================
-  useEffect(() => {
-    const fetchProjectDetails = async () => {
-      const token = localStorage.getItem("token");
-
-      try {
-        const response = await fetch(
-          `http://127.0.0.1:5000/api/projects/${id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setProjectDetails(data); // backend returns object directly
-        } else {
-          console.error("Failed to fetch project");
-        }
-      } catch (error) {
-        console.error("API Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) fetchProjectDetails();
-  }, [id]);
-
-  // ================= FORM STATE =================
+  // State for technical entities
   const [formData, setFormData] = useState({
     regulatory_framework: '',
     class_notation: '',
@@ -55,17 +24,16 @@ const InputParameter: React.FC = () => {
     passenger_count: '',
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    console.log("Saving to Database for Project:", id, formData);
-
+    console.log("Saving to Database for Project:", projectId, formData);
+    
+    // Simulate API Call
     setTimeout(() => {
       setIsSaving(false);
       alert("Technical parameters saved successfully!");
@@ -73,45 +41,33 @@ const InputParameter: React.FC = () => {
   };
 
   const handleNext = () => {
-    navigate(`/projects/${id}/hull-geometry`);
+    // Navigate to the Hull Geometry page using the current project ID
+    navigate(`/projects/${projectId}/hull-geometry`);
   };
-
-  // ================= LOADER =================
-  if (loading) {
-    return (
-      <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-50">
-        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-        <p className="mt-4 text-gray-500 font-bold uppercase tracking-widest">
-          Loading Project...
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto">
-
+        
         {/* Header Navigation */}
         <div className="flex justify-between items-center mb-8">
-          <button
-            onClick={() => navigate(-1)}
+          <button 
+            onClick={() => navigate(-1)} 
             className="flex items-center gap-2 text-gray-500 font-bold text-xs hover:text-blue-600 transition-colors"
           >
             <ArrowLeft size={18} /> BACK TO DETAILS
           </button>
-
+          
           <div className="flex gap-4">
-            <button
+            <button 
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 bg-white border border-gray-200 px-6 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              className="flex items-center gap-2 bg-white border border-gray-200 px-6 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-50"
             >
               {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
               SAVE
             </button>
-
-            <button
+            <button 
               onClick={handleNext}
               className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all"
             >
@@ -121,21 +77,12 @@ const InputParameter: React.FC = () => {
         </div>
 
         <div className="space-y-8">
-
           <header>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Vessel Technical Parameters
-            </h1>
-            <p className="text-sm text-gray-500">
-              Project:{" "}
-              <span className="font-semibold text-blue-600">
-                {projectDetails?.project_name}
-              </span>{" "}
-              ({projectDetails?.project_code})
-            </p>
+            <h1 className="text-2xl font-bold text-gray-800">Vessel Technical Parameters</h1>
+            <p className="text-sm text-gray-500">Project Reference: <span className="font-mono text-blue-600">{projectId}</span></p>
           </header>
 
-          {/* SECTION 1 */}
+          {/* SECTION 1: Regulatory & Classification */}
           <section className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex items-center gap-3 mb-6 border-b pb-4">
               <ShieldCheck className="text-blue-500" />
@@ -143,39 +90,16 @@ const InputParameter: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  Regulatory Framework
-                </label>
-                <input
-                  name="regulatory_framework"
-                  value={formData.regulatory_framework}
-                  onChange={handleChange}
-                  className="w-full p-3 bg-gray-50 border rounded-xl"
-                />
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Regulatory Framework</label>
+                <input name="regulatory_framework" value={formData.regulatory_framework} placeholder="e.g. SOLAS / MARPOL" onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
               </div>
-
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  Class Notation
-                </label>
-                <input
-                  name="class_notation"
-                  value={formData.class_notation}
-                  onChange={handleChange}
-                  className="w-full p-3 bg-gray-50 border rounded-xl"
-                />
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Class Notation</label>
+                <input name="class_notation" value={formData.class_notation} placeholder="e.g. +A1 Towing Vessel" onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
               </div>
-
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  UMS Notation
-                </label>
-                <select
-                  name="ums_notation"
-                  value={formData.ums_notation}
-                  onChange={handleChange}
-                  className="w-full p-3 bg-gray-50 border rounded-xl"
-                >
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">UMS Notation</label>
+                <select name="ums_notation" value={formData.ums_notation} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                   <option value="">Select Option</option>
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -184,7 +108,7 @@ const InputParameter: React.FC = () => {
             </div>
           </section>
 
-          {/* SECTION 2 */}
+          {/* SECTION 2: Tonnage & Capacity */}
           <section className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex items-center gap-3 mb-6 border-b pb-4">
               <Anchor className="text-blue-500" />
@@ -198,22 +122,20 @@ const InputParameter: React.FC = () => {
                 { label: 'Voyage Duration', name: 'voyage_duration_days' },
               ].map((field) => (
                 <div key={field.name} className="space-y-2">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    {field.label}
-                  </label>
-                  <input
-                    name={field.name}
-                    type="number"
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{field.label}</label>
+                  <input 
+                    name={field.name} 
+                    type="number" 
                     value={(formData as any)[field.name]}
-                    onChange={handleChange}
-                    className="w-full p-3 bg-gray-50 border rounded-xl"
+                    onChange={handleChange} 
+                    className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
                   />
                 </div>
               ))}
             </div>
           </section>
 
-          {/* SECTION 3 */}
+          {/* SECTION 3: Ship Complement */}
           <section className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex items-center gap-3 mb-6 border-b pb-4">
               <Users className="text-blue-500" />
@@ -227,15 +149,13 @@ const InputParameter: React.FC = () => {
                 { label: 'Passengers', name: 'passenger_count' },
               ].map((field) => (
                 <div key={field.name} className="space-y-2">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    {field.label}
-                  </label>
-                  <input
-                    name={field.name}
-                    type="number"
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{field.label}</label>
+                  <input 
+                    name={field.name} 
+                    type="number" 
                     value={(formData as any)[field.name]}
-                    onChange={handleChange}
-                    className="w-full p-3 bg-gray-50 border rounded-xl"
+                    onChange={handleChange} 
+                    className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
                   />
                 </div>
               ))}
