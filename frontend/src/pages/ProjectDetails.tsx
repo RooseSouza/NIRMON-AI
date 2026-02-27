@@ -274,7 +274,7 @@ const ProjectDetails: React.FC = () => {
         <div className="md:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400">
           <div className="text-center">
              <Ship className="w-16 h-16 mx-auto mb-4 text-gray-200" />
-             <p className="font-semibold">3D Model Viewer Placeholder</p>
+             <p className="font-semibold">GA Model Viewer Placeholder</p>
           </div>
         </div>
       </div>
