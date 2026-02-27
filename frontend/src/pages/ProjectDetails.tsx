@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Ship, Calendar, User, Anchor, Edit, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Ship, Calendar, User, Anchor, Edit, Plus, Loader2, Lock } from "lucide-react";
 
 const ProjectDetails: React.FC = () => {
   const { id } = useParams(); // Catches the UUID from the URL
@@ -93,6 +93,9 @@ const ProjectDetails: React.FC = () => {
       default: return "bg-gray-400";
     }
   };
+
+  // Logic to lock the project
+  const isUnderReview = project.project_status === "Under Review";
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
@@ -225,23 +228,46 @@ const ProjectDetails: React.FC = () => {
             </div>
           </div>
 
-          {/* Dynamic Button (Edit vs Add) */}
-          <button
-            onClick={() => navigate(`/projects/${id}/input`)}
-            className="w-full mt-10 py-3.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
-          >
-            {hasGaInput ? (
-                <>
-                    <Edit size={20} />
-                    Edit Parameters
-                </>
-            ) : (
-                <>
-                    <Plus size={20} />
-                    Add Parameters
-                </>
+          {/* Action Button Container */}
+          <div className="relative group w-full mt-10">
+            
+            {/* Floating Message (Tooltip) */}
+            {isUnderReview && (
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-max px-3 py-2 bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                Project is Under Review. Editing disabled.
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-800"></div>
+              </div>
             )}
-          </button>
+
+            {/* Main Button */}
+            <button
+              onClick={() => !isUnderReview && navigate(`/projects/${id}/input`)}
+              disabled={isUnderReview}
+              className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 
+                ${isUnderReview 
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200" 
+                    : "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
+                }`}
+            >
+              {isUnderReview ? (
+                <>
+                  <Lock size={20} />
+                  Locked for Review
+                </>
+              ) : hasGaInput ? (
+                <>
+                  <Edit size={20} />
+                  Edit Parameters
+                </>
+              ) : (
+                <>
+                  <Plus size={20} />
+                  Add Parameters
+                </>
+              )}
+            </button>
+          </div>
+
         </div>
 
         {/* Right Side: Empty Box */}
