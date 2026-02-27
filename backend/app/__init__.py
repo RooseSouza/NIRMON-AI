@@ -3,6 +3,7 @@ from flask_cors import CORS
 from app.core.config import Config
 from app.db.database import db
 from flask_jwt_extended import JWTManager
+from datetime import timedelta
 from app.routes.auth_routes import auth_bp
 from app.routes.dashboard_routes import dashboard_bp
 from app.routes.module_routes import module_bp
@@ -23,6 +24,8 @@ def create_app():
     ) 
      # Allow frontend connection
     app.config.from_object(Config)
+
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1) 
 
     db.init_app(app)
     JWTManager(app)
