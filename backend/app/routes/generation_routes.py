@@ -13,38 +13,30 @@ generation_bp = Blueprint("generation", __name__)
 
 @generation_bp.route("/generate", methods=["POST"])
 def generate_ga():
-
     data = request.get_json()
     ga_input_id = data.get("ga_input_id")
-
     if not ga_input_id:
         return jsonify({"error": "ga_input_id is required"}), 400
 
     ga_input = GAInputMaster.query.filter_by(
-        ga_input_id=ga_input_id,
-        is_active=True
+        ga_input_id=ga_input_id, is_active=True
     ).first()
-
     if not ga_input:
         return jsonify({"error": "GA Input not found"}), 404
 
-    hull = HullGeometry.query.filter_by(
-        ga_input_id=ga_input_id
-    ).first()
-
+    hull = HullGeometry.query.filter_by(ga_input_id=ga_input_id).first()
     if not hull:
         return jsonify({"error": "Hull geometry not found"}), 404
 
-    geometry_model = HullGeometryBuilder.build(hull)
+    # Build internal model
+    hull_model = HullGeometryBuilder.build(hull)
 
-    dxf_generator = DXFGenerator()
-    file_path = dxf_generator.generate(geometry_model, "hull_output.dxf")
-
-    print("DXF saved at:", file_path)
+    # Generate DXF
+    file_path=DXFGenerator.generate(hull_model, "outputs/my_hull.dxf", generate_image=True)
 
     return jsonify({
         "status": "success",
-        "geometry_model": geometry_model.to_dict(),
+        "geometry_model": hull_model.to_dict(),
         "hull_parameters": {
             column.name: getattr(hull, column.name)
             for column in hull.__table__.columns
