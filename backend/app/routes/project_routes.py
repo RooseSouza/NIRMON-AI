@@ -138,3 +138,35 @@ def get_project_by_id(project_id):
     }
 
     return jsonify(result), 200
+
+@project_bp.route("/<uuid:project_id>", methods=["PUT"])
+@jwt_required()
+def update_project(project_id):
+
+    project = ShipProject.query.filter_by(
+        project_id=project_id,
+        is_deleted=False
+    ).first()
+
+    if not project:
+        return jsonify({"error": "Project not found"}), 404
+
+    data = request.get_json()
+
+    project.project_name = data.get("project_name", project.project_name)
+    project.project_code = data.get("project_code", project.project_code)
+    project.client_name = data.get("client_name", project.client_name)
+    project.shipyard_name = data.get("shipyard_name", project.shipyard_name)
+    project.project_status = data.get("project_status", project.project_status)
+
+    if data.get("start_date"):
+        project.start_date = datetime.strptime(data["start_date"], "%Y-%m-%d").date()
+
+    if data.get("target_delivery_date"):
+        project.target_delivery_date = datetime.strptime(
+            data["target_delivery_date"], "%Y-%m-%d"
+        ).date()
+
+    db.session.commit()
+
+    return jsonify({"message": "Project updated successfully"}), 200
