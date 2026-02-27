@@ -16,6 +16,7 @@ const HullGeometry: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false); // New State
 
   // --- STYLES ---
   const inputClass = "w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 font-mono";
@@ -34,20 +35,68 @@ const HullGeometry: React.FC = () => {
 
   useEffect(() => {
     if (!gaInputId) { alert("Session lost."); navigate(`/projects/${id}/input-parameter`); return; }
+    
     const fetchData = async () => {
       const token = localStorage.getItem("token");
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/projects/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (response.ok) {
-          const data = await response.json();
-          setProjectDetails(data);
-          if (data?.vessel) {
-            setFormData(prev => ({
-              ...prev,
-              length_overall: data.vessel.loa || '', breadth_moulded: data.vessel.beam || '', design_draft: data.vessel.draft || '',
-              depth_moulded: data.vessel.depth || '', length_between_perpendiculars: data.vessel.loa ? (data.vessel.loa * 0.95).toFixed(2) : ''
-            }));
-          }
+        // 1. Fetch Project Info
+        const projRes = await fetch(`http://127.0.0.1:5000/api/projects/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+        const projData = await projRes.json();
+        setProjectDetails(projData);
+
+        // 2. Try Fetching Existing Hull Data
+        const hullRes = await fetch(`http://127.0.0.1:5000/api/gainputs/${gaInputId}/hull`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (hullRes.ok) {
+            // --- EDIT MODE: Data Exists ---
+            const hullData = await hullRes.json();
+            setIsEditMode(true);
+            setFormData({
+                length_overall: hullData.length_overall,
+                length_between_perpendiculars: hullData.length_between_perpendiculars,
+                breadth_moulded: hullData.breadth_moulded,
+                depth_moulded: hullData.depth_moulded,
+                design_draft: hullData.design_draft,
+                baseline_z: hullData.baseline_z,
+                centerline_y: hullData.centerline_y,
+                block_coefficient: hullData.block_coefficient,
+                prismatic_coefficient: hullData.prismatic_coefficient,
+                midship_coefficient: hullData.midship_coefficient,
+                waterplane_coefficient: hullData.waterplane_coefficient,
+                parallel_midbody_length: hullData.parallel_midbody_length,
+                entrance_length: hullData.entrance_length,
+                run_length: hullData.run_length,
+                bow_rake_angle: hullData.bow_rake_angle,
+                stern_rake_angle: hullData.stern_rake_angle,
+                bilge_radius: hullData.bilge_radius,
+                flare_angle: hullData.flare_angle,
+                deadrise_angle: hullData.deadrise_angle,
+                bulbous_bow: hullData.bulbous_bow,
+                bulb_length: hullData.bulb_length,
+                bulb_height: hullData.bulb_height,
+                stern_type: hullData.stern_type,
+                skeg_enabled: hullData.skeg_enabled,
+                frame_spacing: hullData.frame_spacing,
+                frame_numbering_origin: hullData.frame_numbering_origin,
+                frame_numbering_direction: hullData.frame_numbering_direction,
+                hull_form_type: hullData.hull_form_type,
+                notes: hullData.notes
+            });
+        } else {
+            // --- CREATE MODE: Pre-fill from Vessel ---
+            setIsEditMode(false);
+            if (projData?.vessel) {
+                setFormData(prev => ({
+                  ...prev,
+                  length_overall: projData.vessel.loa || '', 
+                  breadth_moulded: projData.vessel.beam || '', 
+                  design_draft: projData.vessel.draft || '',
+                  depth_moulded: projData.vessel.depth || '', 
+                  length_between_perpendiculars: projData.vessel.loa ? (projData.vessel.loa * 0.95).toFixed(2) : ''
+                }));
+            }
         }
       } catch (err) { console.error(err); } finally { setLoading(false); }
     };
@@ -100,12 +149,18 @@ const HullGeometry: React.FC = () => {
     };
 
     try {
-        const response = await fetch(`http://127.0.0.1:5000/api/gainputs/${gaInputId}/hull`, {
-            method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        const url = `http://127.0.0.1:5000/api/gainputs/${gaInputId}/hull`;
+        const method = isEditMode ? "PUT" : "POST"; // Switch Method
+
+        const response = await fetch(url, {
+            method: method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify(payload),
         });
         const result = await response.json();
-        if (response.ok) { alert("Hull Created!"); navigate(`/projects/${id}`); } 
+        if (response.ok) { 
+            alert(isEditMode ? "Hull Updated!" : "Hull Created!"); 
+            navigate(`/projects/${id}`); 
+        } 
         else { setError(result.error || "Failed to save."); }
     } catch (err) { setError("Network error."); } finally { setIsSaving(false); }
   };
@@ -118,10 +173,10 @@ const HullGeometry: React.FC = () => {
 
         <div className="flex justify-between items-center mb-8">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 font-bold text-xs hover:text-blue-600">
-            <ArrowLeft size={16} /> BACK TO GA INPUT PARAMETERS
+            <ArrowLeft size={16} /> BACK
           </button>
           <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all">
-            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <>Save & Finish <ChevronRight size={18} /></>}
+            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <>{isEditMode ? "UPDATE" : "SAVE"} & FINISH <ChevronRight size={18} /></>}
           </button>
         </div>
 

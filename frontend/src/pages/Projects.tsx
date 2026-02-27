@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Search, Filter } from "lucide-react";
 import ProjectCard from "../components/project/ProjectCard";
+import { fetchWithAuth } from "../utils/api"; // Import the utility
 
 interface Project {
   project_id: string;
@@ -13,15 +14,15 @@ interface Project {
 
 const Projects: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); // Read URL params
+  const [searchParams] = useSearchParams();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All"); // Default filter
+  const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Load Filter from URL on Mount (e.g. ?status=Active)
+  // Load Filter from URL
   useEffect(() => {
     const statusParam = searchParams.get("status");
     if (statusParam) {
@@ -29,26 +30,21 @@ const Projects: React.FC = () => {
     }
   }, [searchParams]);
 
-  // Fetch Projects
+  // Fetch Projects using fetchWithAuth
   useEffect(() => {
     const fetchProjects = async () => {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/projects/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // 👇 Uses the utility. No need to manually add headers.
+        const response = await fetchWithAuth("http://127.0.0.1:5000/api/projects/");
+
+        // If response is null, it means 401 occurred and user was redirected. Stop here.
+        if (!response) return; 
 
         if (!response.ok) {
           throw new Error("Failed to fetch projects");
         }
 
-        const data = await response.json(); // ✅ ONLY ONCE
+        const data = await response.json();
 
         const sortedProjects = (data.projects || []).sort(
           (a: Project, b: Project) =>
@@ -67,7 +63,7 @@ const Projects: React.FC = () => {
     fetchProjects();
   }, [navigate]);
 
-  // 🔎 Combined Filter Logic (Search + Status)
+  // 🔎 Filter Logic
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
       project.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -93,7 +89,7 @@ const Projects: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Status Filter Dropdown */}
+          {/* Status Filter */}
           <div className="relative group">
             <Filter
               size={18}

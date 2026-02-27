@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import { Ship, Activity, FileText, CheckCircle, Clock } from "lucide-react";
+import { fetchWithAuth } from "../utils/api"; // Import utility
 
 interface Project {
   project_id: string;
@@ -8,7 +9,7 @@ interface Project {
 }
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     active: 0,
     pending: 0,
@@ -17,16 +18,15 @@ const Dashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Fetch Logic (Same as before)
+  // Fetch Logic using fetchWithAuth
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/projects/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // 👇 Uses utility. Handles auto-logout on 401.
+        const response = await fetchWithAuth("http://127.0.0.1:5000/api/projects/");
+
+        // If session expired, response is null -> Stop execution
+        if (!response) return; 
 
         if (response.ok) {
           const data = await response.json();
@@ -49,7 +49,6 @@ const Dashboard: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  // Navigation Helper
   const goToProjects = (statusFilter: string) => {
     navigate(`/projects?status=${statusFilter}`);
   };
@@ -69,7 +68,7 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* STATS CARDS - Now Clickable */}
+      {/* STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         
         {/* Active Projects Card */}
@@ -137,9 +136,8 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Rest of Dashboard (Charts etc.) */}
+      {/* Rest of Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1">
-        {/* ... placeholders ... */}
         <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm min-h-[300px] flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Project Analytics</h3>
@@ -155,11 +153,7 @@ const Dashboard: React.FC = () => {
           <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wide mb-6">Recent Activity</h3>
           <div className="space-y-6">
             <div className="flex gap-4">
-              <div className="w-2 h-2 mt-2 rounded-full bg-blue-500 flex-shrink-0"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-800">System Update</p>
-                <p className="text-xs text-gray-500 mt-1">Dashboard live data connected.</p>
-              </div>
+              {/* Log Details */}
             </div>
           </div>
         </div>
