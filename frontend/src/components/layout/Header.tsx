@@ -41,16 +41,6 @@ const Header: React.FC = () => {
 
         {/* RIGHT SIDE: Actions */}
         <div className="flex items-center gap-4">
-            
-            {/* Notification Bell */}
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
-              <span className="sr-only">View notifications</span>
-              <Bell size={20} />
-              <span className="absolute top-2 right-2.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-            </button>
-
-            {/* Divider */}
-            <div className="hidden lg:block h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
 
             {/* User Profile */}
             <UserDropdown />
