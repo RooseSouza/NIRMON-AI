@@ -193,13 +193,36 @@ class RuleMaster(db.Model):
     __tablename__ = "rules_master"
 
     rule_id = db.Column(db.String(20), primary_key=True)
+
+    module = db.Column(db.String(50), nullable=False)  # HULL
+
+    vessel_type_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("vessel_type_master.vessel_type_id"),
+        nullable=False
+    )
+
     category = db.Column(db.String(100), nullable=False)
+
     parameter_name = db.Column(db.String(100), nullable=False)
+
     operator = db.Column(db.String(10), nullable=False)
+
     expression_value = db.Column(db.String(255), nullable=False)
+
     unit = db.Column(db.String(20))
-    constraint_type = db.Column(db.String(10), nullable=False)
+
+    constraint_type = db.Column(db.String(20), nullable=False)
+
+    priority = db.Column(db.Integer, default=1)
+
+    description = db.Column(db.Text)
+
     status = db.Column(db.Boolean, default=True, nullable=False)
+
+    # relationship
+    vessel_type = db.relationship("VesselTypeMaster", backref="rules")
+    
 class GAInputMaster(db.Model):
     __tablename__ = "ga_input_master"
 

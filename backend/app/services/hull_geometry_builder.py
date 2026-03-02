@@ -1,169 +1,54 @@
-# app/services/hull_geometry_builder.py
-
 class HullGeometry:
-    def __init__(
-        self,
-        loa,
-        lbp,
-        breadth,
-        depth,
-        draft,
 
-        # Form coefficients
-        block_coefficient=0.0,
-        prismatic_coefficient=0.0,
+    def __init__(self, hull_db):
 
-        # Longitudinal form
-        midbody_length=0.0,
-        bow_rake_angle=0.0,
-        stern_rake_angle=0.0,
+        if hull_db is None:
+            raise ValueError("Hull DB object cannot be None")
 
-        # Section shape
-        bilge_radius=0.0,
+        def to_float(value, default=0.0):
+            try:
+                return float(value) if value is not None else default
+            except:
+                return default
 
-        # Bulb
-        bulbous_bow=False,
-        bulb_length=0.0,
-        bulb_height=0.0,
+        self.length_overall = to_float(hull_db.length_overall)
+        self.length_between_perpendiculars = to_float(hull_db.length_between_perpendiculars)
 
-        # DXF grid control
-        num_stations=20,
-        num_waterlines=7,
-        num_buttocks=5
-    ):
+        self.breadth_moulded = to_float(hull_db.breadth_moulded)
+        self.depth_moulded = to_float(hull_db.depth_moulded)
+        self.design_draft = to_float(hull_db.design_draft)
 
-        # ------------------------
-        # Principal Dimensions
-        # ------------------------
-        self.loa = float(loa)
-        self.lbp = float(lbp)
-        self.breadth = float(breadth)
-        self.depth = float(depth)
-        self.draft = float(draft)
+        self.block_coefficient = to_float(hull_db.block_coefficient)
+        self.prismatic_coefficient = to_float(hull_db.prismatic_coefficient)
+        self.midship_coefficient = to_float(hull_db.midship_coefficient)
 
-        # ------------------------
-        # Form Coefficients
-        # ------------------------
-        self.block_coefficient = float(block_coefficient)
-        self.prismatic_coefficient = float(prismatic_coefficient)
+        self.parallel_midbody_length = to_float(hull_db.parallel_midbody_length)
+        self.entrance_length = to_float(hull_db.entrance_length)
+        self.run_length = to_float(hull_db.run_length)
 
-        # ------------------------
-        # Derived Geometry
-        # ------------------------
-        self.midship_x = self.lbp / 2
-        self.deck_z = self.depth
-        self.keel_z = 0.0
+        # Auto correction if lengths don't sum to L
+        total = self.parallel_midbody_length + self.entrance_length + self.run_length
+        if total > 0:
+            scale = self.length_between_perpendiculars / total
+            self.parallel_midbody_length *= scale
+            self.entrance_length *= scale
+            self.run_length *= scale
 
-        # ------------------------
-        # Longitudinal Features
-        # ------------------------
-        self.parallel_midbody_length = float(midbody_length)
-        self.bow_rake_angle = float(bow_rake_angle)
-        self.stern_rake_angle = float(stern_rake_angle)
+        self.bow_rake_angle = to_float(hull_db.bow_rake_angle)
+        self.stern_rake_angle = to_float(hull_db.stern_rake_angle)
 
-        # ------------------------
-        # Section Shape
-        # ------------------------
-        self.bilge_radius = float(bilge_radius)
+        self.bilge_radius = to_float(hull_db.bilge_radius)
+        self.stern_type = hull_db.stern_type
+        self.hull_form_type = getattr(hull_db, "hull_form_type", "GENERIC")
 
-        # ------------------------
-        # Bulb Features
-        # ------------------------
-        self.bulbous_bow = bool(bulbous_bow)
-        self.bulb_length = float(bulb_length)
-        self.bulb_height = float(bulb_height)
+        self.frame_spacing = to_float(hull_db.frame_spacing)
 
-        # ------------------------
-        # DXF Grid Controls
-        # ------------------------
-        self.num_stations = int(num_stations)
-        self.num_waterlines = int(num_waterlines)
-        self.num_buttocks = int(num_buttocks)
-
-        # ------------------------
-        # Basic Validation
-        # ------------------------
-        self._validate()
-
-    # ---------------------------------
-    # Validation Rules (Rule Engine Layer)
-    # ---------------------------------
-    def _validate(self):
-
-        if self.draft >= self.depth:
-            raise ValueError("Draft must be less than Depth.")
-
-        if not (0.5 <= self.block_coefficient <= 0.85):
-            raise ValueError("Block Coefficient (Cb) must be between 0.5 and 0.85.")
-
-        if self.parallel_midbody_length > self.lbp:
-            raise ValueError("Parallel midbody length cannot exceed LBP.")
-
-        if self.breadth / self.lbp > 0.4:
-            raise ValueError("Beam/LBP ratio too large for conventional hull.")
-
-    # ---------------------------------
-    # Hydrostatic Helper
-    # ---------------------------------
-    def displacement_volume(self):
-        """
-        Approximate displacement volume using block coefficient
-        """
-        return self.lbp * self.breadth * self.draft * self.block_coefficient
-
-    # ---------------------------------
-    # Export for DXF Generator
-    # ---------------------------------
     def to_dict(self):
-        return {
-            "loa": self.loa,
-            "lbp": self.lbp,
-            "breadth": self.breadth,
-            "depth": self.depth,
-            "draft": self.draft,
-            "block_coefficient": self.block_coefficient,
-            "prismatic_coefficient": self.prismatic_coefficient,
-            "midship_x": self.midship_x,
-            "deck_z": self.deck_z,
-            "keel_z": self.keel_z,
-            "parallel_midbody_length": self.parallel_midbody_length,
-            "bow_rake_angle": self.bow_rake_angle,
-            "stern_rake_angle": self.stern_rake_angle,
-            "bilge_radius": self.bilge_radius,
-            "bulbous_bow": self.bulbous_bow,
-            "bulb_length": self.bulb_length,
-            "bulb_height": self.bulb_height,
-            "num_stations": self.num_stations,
-            "num_waterlines": self.num_waterlines,
-            "num_buttocks": self.num_buttocks,
-            "displacement_volume": self.displacement_volume()
-        }
+        return dict(self.__dict__)
 
 
 class HullGeometryBuilder:
 
     @staticmethod
     def build(hull_db_object):
-        """
-        Build HullGeometry from HullGeometry database object
-        """
-
-        return HullGeometry(
-            loa=hull_db_object.length_overall,
-            lbp=hull_db_object.length_between_perpendiculars,
-            breadth=hull_db_object.breadth_moulded,
-            depth=hull_db_object.depth_moulded,
-            draft=hull_db_object.design_draft,
-            block_coefficient=hull_db_object.block_coefficient,
-            prismatic_coefficient=hull_db_object.prismatic_coefficient,
-            midbody_length=hull_db_object.parallel_midbody_length,
-            bow_rake_angle=hull_db_object.bow_rake_angle,
-            stern_rake_angle=hull_db_object.stern_rake_angle,
-            bilge_radius=hull_db_object.bilge_radius,
-            bulbous_bow=hull_db_object.bulbous_bow,
-            bulb_length=hull_db_object.bulb_length,
-            bulb_height=hull_db_object.bulb_height,
-            num_stations=hull_db_object.num_stations,
-            num_waterlines=hull_db_object.num_waterlines,
-            num_buttocks=hull_db_object.num_buttocks
-        )
+        return HullGeometry(hull_db_object)
