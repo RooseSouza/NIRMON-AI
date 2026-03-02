@@ -10,7 +10,8 @@ import NewProject from "../pages/NewProject";
 import InputParameter from "../pages/InputParameter";
 import Login from "../pages/Login";
 import ProjectDetails from "../pages/ProjectDetails";
-import HullGeometry from "../pages/HullGeometry"; // 
+import HullGeometry from "../pages/HullGeometry"; 
+import RuleUpload from "../pages/RuleUpload"; // <--- IMPORT THIS
 
 const AppRoutes: React.FC = () => {
   return (
@@ -30,13 +31,13 @@ const AppRoutes: React.FC = () => {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/new" element={<NewProject />} />
           
-          {/* ✅ THE FIX: 
-              1. Changed :id to :projectId to match your component logic 
-              2. Added the Hull Geometry route
-          */}
+          {/* Project Specifics */}
           <Route path="/projects/:id" element={<ProjectDetails />} />
           <Route path="/projects/:id/input" element={<InputParameter />} />
           <Route path="/projects/:id/hull-geometry" element={<HullGeometry />} />
+
+          {/* ✅ NEW RULE EXTRACTION ROUTE */}
+          <Route path="/rule-extraction" element={<RuleUpload />} />
 
         </Route>
       </Route>

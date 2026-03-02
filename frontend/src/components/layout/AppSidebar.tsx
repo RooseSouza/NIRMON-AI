@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { FileText } from "lucide-react"; // <--- Import Icon for Rules
 
 // Context
 import { useSidebar } from "../../context/SidebarContext";
@@ -9,7 +10,7 @@ import logo from "../../assets/nirmon-logo.png";
 import logoSmall from "../../assets/nirmon-logo-small.png";
 
 // Icons
-import { GridIcon, CalenderIcon } from "../icons"; // Assuming these are your custom icons
+import { GridIcon, CalenderIcon } from "../icons";
 
 interface Module {
   module_id: string;
@@ -27,7 +28,22 @@ const AppSidebar: React.FC = () => {
   useEffect(() => {
     const storedModules = localStorage.getItem("modules");
     if (storedModules) {
-      setModules(JSON.parse(storedModules));
+      const parsedModules = JSON.parse(storedModules);
+
+      // --- TEMPORARY FIX FOR NO RBAC ---
+      // This forces "Rule Extraction" to appear in the sidebar 
+      // even if it's not in your database yet.
+      const hasRules = parsedModules.find((m: any) => m.module_name === "Rule Extraction");
+      if (!hasRules) {
+        parsedModules.push({
+          module_id: "temp-rules",
+          module_name: "Rule Extraction",
+          parent_module_id: null
+        });
+      }
+      // ---------------------------------
+
+      setModules(parsedModules);
     }
   }, []);
 
@@ -35,6 +51,7 @@ const AppSidebar: React.FC = () => {
     (path: string) => {
       if (path === "/dashboard") return location.pathname === "/dashboard";
       if (path === "/projects") return location.pathname.startsWith("/projects");
+      if (path === "/rule-extraction") return location.pathname.startsWith("/rule-extraction");
       return false;
     },
     [location.pathname]
@@ -49,6 +66,8 @@ const AppSidebar: React.FC = () => {
         return <GridIcon />;
       case "projects":
         return <CalenderIcon />;
+      case "rule extraction": // <--- Match the name added above
+        return <FileText size={20} />; // Using Lucide icon
       default:
         return null;
     }
