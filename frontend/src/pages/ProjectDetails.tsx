@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker"; // 1. Import DatePicker
+import "react-datepicker/dist/react-datepicker.css"; // 1. Import CSS
 import {
   ArrowLeft,
   Ship,
@@ -10,10 +12,12 @@ import {
   Plus,
   Loader2,
   Lock,
+  X,
+  Save,
 } from "lucide-react";
 
 const ProjectDetails: React.FC = () => {
-  const { id } = useParams(); // Catches the UUID from the URL
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [project, setProject] = useState<any>(null);
@@ -21,21 +25,20 @@ const ProjectDetails: React.FC = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<any>({});
-
-  // New State: Check if parameters already exist
+  const [isSaving, setIsSaving] = useState(false);
   const [hasGaInput, setHasGaInput] = useState(false);
+
+  // New State for Date Validation Error
+  const [dateError, setDateError] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
 
       try {
-        // 1. Fetch Project Details
         const projectRes = await fetch(
           `http://127.0.0.1:5000/api/projects/${id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         if (projectRes.ok) {
@@ -45,18 +48,15 @@ const ProjectDetails: React.FC = () => {
           console.error("Project not found");
         }
 
-        // 2. Check if GA Inputs exist (to toggle Edit/Add button)
         const gaRes = await fetch(
           `http://127.0.0.1:5000/api/gainputs/project/${id}/latest`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         if (gaRes.ok) {
-          setHasGaInput(true); // Data exists -> Edit Mode
+          setHasGaInput(true);
         } else {
-          setHasGaInput(false); // 404 -> Add Mode
+          setHasGaInput(false);
         }
       } catch (error) {
         console.error("API Error:", error);
@@ -69,32 +69,78 @@ const ProjectDetails: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-  if (project) {
-    setEditData({
-      project_name: project.project_name,
-      project_code: project.project_code,
-      client_name: project.client_name,
-      shipyard_name: project.shipyard_name,
-      project_status: project.project_status,
-      start_date: project.start_date?.split("T")[0],
-      target_delivery_date: project.target_delivery_date?.split("T")[0],
-    });
-  }
-}, [project]);
+    if (project) {
+      setEditData({
+        project_name: project.project_name,
+        project_code: project.project_code,
+        client_name: project.client_name,
+        shipyard_name: project.shipyard_name,
+        project_status: project.project_status,
+        // Ensure dates are strings YYYY-MM-DD
+        start_date: project.start_date?.split("T")[0],
+        target_delivery_date: project.target_delivery_date?.split("T")[0],
+      });
+    }
+  }, [project]);
 
-  if (loading)
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-      </div>
-    );
+  // Helper to safely parse string to Date object for DatePicker
+  const parseDate = (dateStr: string) => {
+    return dateStr ? new Date(dateStr) : null;
+  };
 
-  if (!project)
-    return (
-      <div className="p-8 text-center text-red-500 font-bold">
-        Project Not Found
-      </div>
-    );
+  // Helper to format Date object to YYYY-MM-DD for State/API
+  const formatDateForApi = (date: Date | null) => {
+    return date ? date.toISOString().split("T")[0] : "";
+  };
+
+  const handleUpdateProject = async () => {
+    // 2. Final Validation Check before API Call
+    if (editData.start_date && editData.target_delivery_date) {
+      if (
+        new Date(editData.target_delivery_date) <= new Date(editData.start_date)
+      ) {
+        setDateError("Target date must be after Start date");
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/api/projects/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editData),
+      });
+
+      if (response.ok) {
+        setProject({ ...project, ...editData });
+        setIsEditing(false);
+        setDateError(""); // Clear errors
+      } else {
+        console.error("Failed to update");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const isUnderReview = project?.project_status === "Under Review";
+
+  const formatDateDisplay = (dateString?: string) => {
+    if (!dateString) return "---";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -134,51 +180,21 @@ const ProjectDetails: React.FC = () => {
     }
   };
 
-const handleUpdateProject = async () => {
-  const token = localStorage.getItem("token");
-
-  try {
-    const response = await fetch(
-      `http://127.0.0.1:5000/api/projects/${id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(editData),
-      }
+  if (loading)
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+      </div>
     );
-
-    if (response.ok) {
-      setProject({ ...project, ...editData });
-      setIsEditing(false);
-    } else {
-      console.error("Failed to update");
-    }
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-  // Logic to lock the project
-  const isUnderReview = project.project_status === "Under Review";
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "---";
-
-    const date = new Date(dateString);
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-
-    return `${day}/${month}/${year}`;
-  };
+  if (!project)
+    return (
+      <div className="p-8 text-center text-red-500 font-bold">
+        Project Not Found
+      </div>
+    );
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
-      {/* Navigation Header */}
       <button
         onClick={() => navigate("/projects")}
         className="flex items-center gap-2 mb-6 text-gray-500 hover:text-blue-600 font-bold transition-colors"
@@ -187,7 +203,6 @@ const handleUpdateProject = async () => {
       </button>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left Side: Project Info Card */}
         <div className="md:col-span-1 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 relative">
           <button
             onClick={() => setIsEditing(true)}
@@ -205,7 +220,6 @@ const handleUpdateProject = async () => {
           </div>
 
           <div className="space-y-6">
-            {/* Row 1: Project Name + Vessel Type */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
@@ -215,7 +229,6 @@ const handleUpdateProject = async () => {
                   {project.project_name}
                 </p>
               </div>
-
               <div>
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                   Vessel Type
@@ -225,39 +238,30 @@ const handleUpdateProject = async () => {
                 </p>
               </div>
             </div>
-
-            {/* Row 2: Code + Status */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                   Code
                 </label>
-                <p className="font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block text-sm">
+                <p className="font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm">
                   {project.project_code}
                 </p>
               </div>
-
               <div>
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                   Status
                 </label>
                 <p
-                  className={`font-semibold flex items-center gap-1 text-sm ${getStatusColor(
-                    project.project_status,
-                  )}`}
+                  className={`font-semibold flex items-center gap-1 text-sm ${getStatusColor(project.project_status)}`}
                 >
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(
-                      project.project_status,
-                    )}`}
+                    className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(project.project_status)}`}
                   ></span>
                   {project.project_status}
                 </p>
               </div>
             </div>
-
             <div className="border-t pt-4 space-y-6">
-              {/* Row 3: Client + Shipyard */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-start gap-3">
                   <User size={16} className="text-gray-400 mt-1" />
@@ -266,11 +270,10 @@ const handleUpdateProject = async () => {
                       Client
                     </label>
                     <p className="text-sm font-medium">
-                      {project.client_name || "Internal Project"}
+                      {project.client_name || "Internal"}
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3">
                   <Anchor size={16} className="text-gray-400 mt-1" />
                   <div>
@@ -283,8 +286,6 @@ const handleUpdateProject = async () => {
                   </div>
                 </div>
               </div>
-
-              {/* Row 4: Start Date + Target Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-start gap-3">
                   <Calendar size={16} className="text-gray-400 mt-1" />
@@ -293,11 +294,10 @@ const handleUpdateProject = async () => {
                       Start Date
                     </label>
                     <p className="text-sm font-medium">
-                      {formatDate(project.start_date)}
+                      {formatDateDisplay(project.start_date)}
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3">
                   <Calendar size={16} className="text-gray-400 mt-1" />
                   <div>
@@ -305,7 +305,7 @@ const handleUpdateProject = async () => {
                       Target Delivery
                     </label>
                     <p className="text-sm font-medium">
-                      {formatDate(project.target_delivery_date)}
+                      {formatDateDisplay(project.target_delivery_date)}
                     </p>
                   </div>
                 </div>
@@ -313,50 +313,37 @@ const handleUpdateProject = async () => {
             </div>
           </div>
 
-          {/* Action Button Container */}
           <div className="relative group w-full mt-10">
-            {/* Floating Message (Tooltip) */}
             {isUnderReview && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-max px-3 py-2 bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                 Project is Under Review. Editing disabled.
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-800"></div>
               </div>
             )}
-
-            {/* Main Button */}
             <button
               onClick={() =>
                 !isUnderReview && navigate(`/projects/${id}/input`)
               }
               disabled={isUnderReview}
-              className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 
-                ${
-                  isUnderReview
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                    : "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
-                }`}
+              className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isUnderReview ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200" : "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"}`}
             >
               {isUnderReview ? (
                 <>
-                  <Lock size={20} />
-                  Locked for Review
+                  <Lock size={20} /> Locked for Review
                 </>
               ) : hasGaInput ? (
                 <>
-                  <Edit size={20} />
-                  Edit Parameters
+                  <Edit size={20} /> Edit Parameters
                 </>
               ) : (
                 <>
-                  <Plus size={20} />
-                  Add Parameters
+                  <Plus size={20} /> Add Parameters
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Right Side: Empty Box */}
         <div className="md:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400">
           <div className="text-center">
             <Ship className="w-16 h-16 mx-auto mb-4 text-gray-200" />
@@ -364,93 +351,183 @@ const handleUpdateProject = async () => {
           </div>
         </div>
       </div>
+
+      {/* EDIT MODAL */}
       {isEditing && (
-  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-    
-    <div className="bg-white w-full max-w-xl p-8 rounded-2xl shadow-2xl border border-gray-100 relative">
-      
-      <h2 className="text-xl font-bold mb-6">Edit Project</h2>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-xl p-8 rounded-2xl shadow-2xl border border-gray-100 relative animate-in fade-in zoom-in duration-200">
+            <h2 className="text-xl font-bold mb-6 text-gray-800">
+              Edit Project
+            </h2>
 
-      <div className="space-y-4">
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                  Project Name
+                </label>
+                <input
+                  type="text"
+                  value={editData.project_name}
+                  onChange={(e) =>
+                    setEditData({ ...editData, project_name: e.target.value })
+                  }
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  placeholder="Enter project name"
+                />
+              </div>
 
-        <input
-          type="text"
-          value={editData.project_name}
-          onChange={(e) =>
-            setEditData({ ...editData, project_name: e.target.value })
-          }
-          className="w-full border p-3 rounded-lg"
-          placeholder="Project Name"
-        />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                    Project Code
+                  </label>
+                  <input
+                    type="text"
+                    value={editData.project_code}
+                    onChange={(e) =>
+                      setEditData({ ...editData, project_code: e.target.value })
+                    }
+                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="Enter code"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={editData.project_status}
+                    onChange={(e) =>
+                      setEditData({
+                        ...editData,
+                        project_status: e.target.value,
+                      })
+                    }
+                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
 
-        <input
-          type="text"
-          value={editData.project_code}
-          onChange={(e) =>
-            setEditData({ ...editData, project_code: e.target.value })
-          }
-          className="w-full border p-3 rounded-lg"
-          placeholder="Project Code"
-        />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                    Client Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editData.client_name}
+                    onChange={(e) =>
+                      setEditData({ ...editData, client_name: e.target.value })
+                    }
+                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    placeholder="Client Name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                    Shipyard
+                  </label>
+                  <input
+                    type="text"
+                    value={editData.shipyard_name}
+                    onChange={(e) =>
+                      setEditData({
+                        ...editData,
+                        shipyard_name: e.target.value,
+                      })
+                    }
+                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    placeholder="Shipyard Name"
+                  />
+                </div>
+              </div>
 
-        <input
-          type="text"
-          value={editData.client_name}
-          onChange={(e) =>
-            setEditData({ ...editData, client_name: e.target.value })
-          }
-          className="w-full border p-3 rounded-lg"
-          placeholder="Client Name"
-        />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                    Start Date
+                  </label>
+                  {/* 3. React Date Picker for Start Date */}
+                  <DatePicker
+                    selected={parseDate(editData.start_date)}
+                    onChange={(date: Date | null) => {
+                      setEditData({
+                        ...editData,
+                        start_date: formatDateForApi(date),
+                      });
+                      // Optional: Reset error if user fixes start date
+                      setDateError("");
+                    }}
+                    dateFormat="dd/MM/yyyy"
+                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-700"
+                    placeholderText="Select Start Date"
+                  />
+                </div>
 
-        <input
-          type="text"
-          value={editData.shipyard_name}
-          onChange={(e) =>
-            setEditData({ ...editData, shipyard_name: e.target.value })
-          }
-          className="w-full border p-3 rounded-lg"
-          placeholder="Shipyard Name"
-        />
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                    Target Delivery
+                  </label>
+                  {/* 4. React Date Picker for Target Date with Validation */}
+                  <DatePicker
+                    selected={parseDate(editData.target_delivery_date)}
+                    onChange={(date: Date | null) => {
+                      setEditData({
+                        ...editData,
+                        target_delivery_date: formatDateForApi(date),
+                      });
+                      setDateError(""); // Clear error on change
+                    }}
+                    dateFormat="dd/MM/yyyy"
+                    className={`w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-700 ${dateError ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                    placeholderText="Select Target Date"
+                    minDate={parseDate(editData.start_date) || new Date()} // 5. Prevent selecting dates before Start Date
+                  />
+                </div>
+              </div>
 
-        <input
-          type="date"
-          value={editData.start_date}
-          onChange={(e) =>
-            setEditData({ ...editData, start_date: e.target.value })
-          }
-          className="w-full border p-3 rounded-lg"
-        />
+              {/* 6. Visual Error Message */}
+              {dateError && (
+                <p className="text-red-500 text-xs font-semibold">
+                  {dateError}
+                </p>
+              )}
+            </div>
 
-        <input
-          type="date"
-          value={editData.target_delivery_date}
-          onChange={(e) =>
-            setEditData({ ...editData, target_delivery_date: e.target.value })
-          }
-          className="w-full border p-3 rounded-lg"
-        />
-
-      </div>
-
-      <div className="flex justify-end gap-3 mt-6">
-        <button
-          onClick={() => setIsEditing(false)}
-          className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={handleUpdateProject}
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-        >
-          Save Changes
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  setDateError("");
+                }}
+                className="px-5 py-2.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateProject}
+                disabled={isSaving}
+                className="px-5 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium shadow-md shadow-blue-200 transition-colors flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <>
+                    <Save size={18} /> Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

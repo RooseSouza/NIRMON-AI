@@ -96,10 +96,15 @@ const NewProject: React.FC = () => {
         }
     });
     
+    // ✅ Date Validation Logic
     if (!targetDate) {
-        // Optional: you can make target date mandatory or optional here
-        // newErrors["targetDate"] = "Required"; 
-        // hasError = true;
+        newErrors["targetDate"] = "Target Delivery Date is required"; 
+        hasError = true;
+    } else if (startDate && targetDate <= startDate) {
+        newErrors["targetDate"] = "Target Date must be after Start Date";
+        hasError = true;
+    } else {
+        delete newErrors["targetDate"]; // Clear error if valid
     }
 
     setErrors(newErrors);
@@ -312,11 +317,33 @@ const NewProject: React.FC = () => {
                 <div className="md:col-span-2 grid grid-cols-2 gap-12">
                     <div>
                         <label className="label">Start Date</label>
-                        <DatePicker selected={startDate} onChange={(date: Date | null) => setStartDate(date)} dateFormat="dd/MM/yyyy" className="input w-full bg-gray-100 cursor-not-allowed" disabled />
+                        <DatePicker 
+                            selected={startDate} 
+                            onChange={(date: Date | null) => setStartDate(date)} 
+                            dateFormat="dd/MM/yyyy" 
+                            className="input w-full bg-gray-100 cursor-not-allowed" 
+                            disabled 
+                        />
                     </div>
                     <div>
                         <label className="label">Target Delivery Date <span className="text-red-500">*</span></label>
-                        <DatePicker selected={targetDate} onChange={(date: Date | null) => setTargetDate(date)} dateFormat="dd/MM/yyyy" className="input w-full" placeholderText="Select Date" required />
+                        {/* ✅ VALIDATION: MinDate added to prevent UI selection of past dates */}
+                        <DatePicker 
+                            selected={targetDate} 
+                            onChange={(date: Date | null) => {
+                                setTargetDate(date);
+                                if (date && startDate && date > startDate) {
+                                    setErrors(prev => ({ ...prev, targetDate: "" }));
+                                }
+                            }} 
+                            dateFormat="dd/MM/yyyy" 
+                            className={`input w-full ${errors.targetDate ? 'border-red-500 focus:ring-red-200' : ''}`} 
+                            placeholderText="Select Date" 
+                            required 
+                            minDate={startDate ? new Date(startDate.getTime() + 86400000) : new Date()} // Start Date + 1 Day
+                        />
+                        {/* ✅ VALIDATION: Error Message */}
+                        {errors.targetDate && <p className="text-red-500 text-xs mt-1">{errors.targetDate}</p>}
                     </div>
                 </div>
 
