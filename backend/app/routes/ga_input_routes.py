@@ -18,9 +18,6 @@ def create_ga_input_master():
         data = request.get_json()
         current_user = get_jwt_identity()
 
-        # -----------------------------
-        # Required Fields
-        # -----------------------------
         required_fields = [
             "project_id",
             "vessel_id",
@@ -57,17 +54,13 @@ def create_ga_input_master():
 
         new_version_number = (latest_version or 0) + 1
 
-        # -----------------------------
         # Set Previous Versions Inactive
-        # -----------------------------
         GAInputMaster.query.filter_by(
             project_id=uuid.UUID(data["project_id"]),
             is_current_version=True
         ).update({"is_current_version": False})
 
-        # -----------------------------
         # Create New Record
-        # -----------------------------
         new_record = GAInputMaster(
             ga_input_id=uuid.uuid4(),
 
@@ -116,35 +109,163 @@ def create_ga_input_master():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@ga_input_bp.route("/project/<uuid:project_id>/latest", methods=["GET"])
+@jwt_required()
+def get_latest_ga_input(project_id):
+    # Find the latest active record for this project
+    ga_input = GAInputMaster.query.filter_by(
+        project_id=project_id,
+        is_active=True,
+        is_current_version=True
+    ).order_by(GAInputMaster.version_number.desc()).first()
 
-    #hull geometry 
+    if not ga_input:
+        return jsonify({"message": "No data found"}), 404
+
+    # Serialize data
+    return jsonify({
+        "ga_input_id": str(ga_input.ga_input_id),
+        "regulatory_framework": ga_input.regulatory_framework,
+        "class_notation": ga_input.class_notation,
+        "ums_notation": "Yes" if ga_input.ums_notation else "No",
+        "gross_tonnage": float(ga_input.gross_tonnage) if ga_input.gross_tonnage else "",
+        "deadweight": float(ga_input.deadweight) if ga_input.deadweight else "",
+        "crew_count": ga_input.crew_count,
+        "officer_count": ga_input.officer_count,
+        "rating_count": ga_input.rating_count,
+        "passenger_count": ga_input.passenger_count,
+        "endurance_days": float(ga_input.endurance_days),
+        "voyage_duration_days": float(ga_input.voyage_duration_days) if ga_input.voyage_duration_days else "",
+        "status": ga_input.version_status
+    }), 200
+
+
+    # HULL GEOMETRY - ADVANCED
 @ga_input_bp.route("/<uuid:ga_input_id>/hull", methods=["POST"])
 @jwt_required()
 def create_hull(ga_input_id):
 
     data = request.get_json()
 
+    # Check GA Input exists
     ga_input = GAInputMaster.query.get(ga_input_id)
     if not ga_input:
         return jsonify({"error": "GA Input not found"}), 404
 
-    existing = HullGeometry.query.filter_by(ga_input_id=ga_input_id).first()
+    # Prevent duplicate hull
+    existing = HullGeometry.query.filter_by(
+        ga_input_id=ga_input_id
+    ).first()
+
     if existing:
         return jsonify({"error": "Hull already exists"}), 400
 
-    new_hull = HullGeometry(
-        ga_input_id=ga_input_id,
-        length_overall=data["length_overall"],
-        length_between_perpendiculars=data["length_between_perpendiculars"],
-        breadth_moulded=data["breadth_moulded"],
-        depth_moulded=data["depth_moulded"],
-        design_draft=data["design_draft"],
-        frame_spacing=data["frame_spacing"],
-        frame_numbering_origin=data["frame_numbering_origin"],
-        frame_numbering_direction=data["frame_numbering_direction"]
-    )
+    try:
+        new_hull = HullGeometry(
 
-    db.session.add(new_hull)
-    db.session.commit()
+            # =============================
+            # Principal Dimensions
+            # =============================
+            ga_input_id=ga_input_id,
+            length_overall=data["length_overall"],
+            length_between_perpendiculars=data["length_between_perpendiculars"],
+            breadth_moulded=data["breadth_moulded"],
+            depth_moulded=data["depth_moulded"],
+            design_draft=data["design_draft"],
+            baseline_z=data.get("baseline_z", 0.00),
+            centerline_y=data.get("centerline_y", 0.00),
 
-    return jsonify({"message": "Hull created"}), 201
+            # =============================
+            # Hydrostatic Coefficients
+            # =============================
+            block_coefficient=data["block_coefficient"],
+            prismatic_coefficient=data["prismatic_coefficient"],
+            midship_coefficient=data["midship_coefficient"],
+            waterplane_coefficient=data["waterplane_coefficient"],
+
+            # =============================
+            # Longitudinal Distribution
+            # =============================
+            parallel_midbody_length=data["parallel_midbody_length"],
+            entrance_length=data["entrance_length"],
+            run_length=data["run_length"],
+            bow_rake_angle=data.get("bow_rake_angle"),
+            stern_rake_angle=data.get("stern_rake_angle"),
+
+            # =============================
+            # Transverse Shape
+            # =============================
+            bilge_radius=data["bilge_radius"],
+            flare_angle=data.get("flare_angle"),
+            deadrise_angle=data.get("deadrise_angle"),
+
+            # =============================
+            # Bow / Stern Features
+            # =============================
+            bulbous_bow=data.get("bulbous_bow", False),
+            bulb_length=data.get("bulb_length"),
+            bulb_height=data.get("bulb_height"),
+            stern_type=data.get("stern_type"),
+            skeg_enabled=data.get("skeg_enabled", False),
+
+            # =============================
+            # Structural Grid
+            # =============================
+            frame_spacing=data["frame_spacing"],
+            frame_numbering_origin=data["frame_numbering_origin"],
+            frame_numbering_direction=data["frame_numbering_direction"],
+
+            # =============================
+            # Optional
+            # =============================
+            hull_form_type=data.get("hull_form_type"),
+            notes=data.get("notes")
+        )
+
+        db.session.add(new_hull)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Hull geometry created successfully",
+            "hull_geometry_id": str(new_hull.hull_geometry_id)
+        }), 201
+
+    except KeyError as e:
+        return jsonify({"error": f"Missing required field: {str(e)}"}), 400
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@ga_input_bp.route("/<uuid:ga_input_id>", methods=["PUT"])
+@jwt_required()
+def update_ga_input(ga_input_id):
+    try:
+        data = request.get_json()
+        ga_input = GAInputMaster.query.get(ga_input_id)
+
+        if not ga_input:
+            return jsonify({"error": "Record not found"}), 404
+
+        # Update fields
+        if "regulatory_framework" in data: ga_input.regulatory_framework = data["regulatory_framework"]
+        if "class_notation" in data: ga_input.class_notation = data["class_notation"]
+        if "ums_notation" in data: ga_input.ums_notation = data["ums_notation"] # Expecting boolean from frontend logic
+        if "gross_tonnage" in data: ga_input.gross_tonnage = data["gross_tonnage"]
+        if "deadweight" in data: ga_input.deadweight = data["deadweight"]
+        if "crew_count" in data: ga_input.crew_count = data["crew_count"]
+        if "officer_count" in data: ga_input.officer_count = data["officer_count"]
+        if "rating_count" in data: ga_input.rating_count = data["rating_count"]
+        if "passenger_count" in data: ga_input.passenger_count = data["passenger_count"]
+        if "endurance_days" in data: ga_input.endurance_days = data["endurance_days"]
+        if "voyage_duration_days" in data: ga_input.voyage_duration_days = data["voyage_duration_days"]
+        
+        ga_input.modified_at = datetime.utcnow()
+
+        db.session.commit()
+
+        return jsonify({"message": "Updated successfully", "ga_input_id": str(ga_input.ga_input_id)}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
