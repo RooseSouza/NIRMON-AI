@@ -31,16 +31,26 @@ const AppSidebar: React.FC = () => {
       const parsedModules = JSON.parse(storedModules);
 
       // --- TEMPORARY FIX FOR NO RBAC ---
-      // This forces "Rule Extraction" to appear in the sidebar 
+      // This forces "Rule Extraction" to appear in the sidebar
       // even if it's not in your database yet.
-      const hasRules = parsedModules.find((m: any) => m.module_name === "Rule Extraction");
+      const hasRules = parsedModules.find(
+        (m: any) => m.module_name === "Rule Extraction",
+      );
       if (!hasRules) {
         parsedModules.push({
           module_id: "temp-rules",
           module_name: "Rule Extraction",
-          parent_module_id: null
+          parent_module_id: null,
         });
       }
+
+      // Inside useEffect...
+      parsedModules.push({
+        module_id: "temp-gen",
+        module_name: "AI Generation", // Will map to /ai-generation
+        module_url: "generation",
+        parent_module_id: null,
+      });
       // ---------------------------------
 
       setModules(parsedModules);
@@ -50,11 +60,13 @@ const AppSidebar: React.FC = () => {
   const isActive = useCallback(
     (path: string) => {
       if (path === "/dashboard") return location.pathname === "/dashboard";
-      if (path === "/projects") return location.pathname.startsWith("/projects");
-      if (path === "/rule-extraction") return location.pathname.startsWith("/rule-extraction");
+      if (path === "/projects")
+        return location.pathname.startsWith("/projects");
+      if (path === "/rule-extraction")
+        return location.pathname.startsWith("/rule-extraction");
       return false;
     },
-    [location.pathname]
+    [location.pathname],
   );
 
   const generatePath = (name: string) =>
@@ -81,11 +93,7 @@ const AppSidebar: React.FC = () => {
       bg-white dark:bg-gray-900 dark:border-gray-800 
       text-gray-900 h-screen transition-all duration-300 
       ease-in-out z-50 border-r border-gray-200 
-      ${
-        showFullContent
-          ? "w-[260px]"
-          : "w-[90px]"
-      }
+      ${showFullContent ? "w-[260px]" : "w-[90px]"}
       ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
       lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
@@ -129,9 +137,7 @@ const AppSidebar: React.FC = () => {
                   <Link
                     to={path}
                     className={`menu-item group ${
-                      isActive(path)
-                        ? "menu-item-active"
-                        : "menu-item-inactive"
+                      isActive(path) ? "menu-item-active" : "menu-item-inactive"
                     } ${
                       !showFullContent
                         ? "lg:justify-center"
@@ -164,9 +170,7 @@ const AppSidebar: React.FC = () => {
                               <Link
                                 to={childPath}
                                 className={`menu-dropdown-item ${
-                                  isActive(childPath)
-                                    ? "menu-item-active"
-                                    : ""
+                                  isActive(childPath) ? "menu-item-active" : ""
                                 }`}
                               >
                                 {child.module_name}

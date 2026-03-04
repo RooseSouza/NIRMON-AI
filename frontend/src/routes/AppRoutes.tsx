@@ -12,6 +12,7 @@ import Login from "../pages/Login";
 import ProjectDetails from "../pages/ProjectDetails";
 import HullGeometry from "../pages/HullGeometry"; 
 import RuleUpload from "../pages/RuleUpload"; // <--- IMPORT THIS
+import DesignGenerator from "../pages/DesignGenerator";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -38,6 +39,7 @@ const AppRoutes: React.FC = () => {
 
           {/* ✅ NEW RULE EXTRACTION ROUTE */}
           <Route path="/rule-extraction" element={<RuleUpload />} />
+          <Route path="/ai-generation" element={<DesignGenerator />} />
 
         </Route>
       </Route>
