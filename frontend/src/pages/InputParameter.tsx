@@ -74,7 +74,21 @@ const InputParameter: React.FC = () => {
   }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    
+    setFormData(prev => {
+        const newData = { ...prev, [name]: value };
+
+        // --- UPDATED FUNCTIONALITY: Auto-calculate total crew ---
+        if (name === 'officer_count' || name === 'rating_count') {
+            const officers = parseInt(newData.officer_count) || 0;
+            const ratings = parseInt(newData.rating_count) || 0;
+            newData.crew_count = (officers + ratings).toString();
+        }
+        
+        return newData;
+    });
+    
     setError(null);
   };
 
@@ -89,6 +103,7 @@ const InputParameter: React.FC = () => {
     const ratings = parseInt(formData.rating_count) || 0;
     const totalCrew = parseInt(formData.crew_count) || 0;
 
+    // Validate that calculated crew matches entered total
     if (totalCrew !== officers + ratings) {
         setError(`Total Crew (${totalCrew}) must equal Officers (${officers}) + Ratings (${ratings}).`);
         setIsSaving(false); return;
@@ -133,7 +148,7 @@ const InputParameter: React.FC = () => {
 
         if (response.ok) {
             const targetId = existingGaInputId || result.ga_input_id;
-            navigate(`/projects/${id}/hull-geometry`, { state: { gaInputId: targetId } });
+            navigate(`/projects/${id}/ga_input_decks`, { state: { gaInputId: targetId } });
         } else {
             setError(result.error || "Failed to save data.");
         }
