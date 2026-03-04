@@ -2,7 +2,7 @@ from openai import OpenAI
 import os
 import json
 
-def generate_ship_coordinates():
+def generate_ship_coordinates(params):
     print("\n--- 🚀 Asking Gemma 3 for Engineering-Grade RSV Design ---")
     
     api_key = os.getenv("OPENROUTER_API_KEY")
@@ -14,12 +14,19 @@ def generate_ship_coordinates():
         api_key=api_key,
     )
 
+    def get_val(key, default):
+        try:
+            return float(params.get(key, default))
+        except:
+            return default
+
     # --- 1. HARD MATHEMATICAL CONSTRAINTS ---
     # We calculate these here so the AI has a rigid skeleton to follow
-    LOA = 88.0
-    LBP = 82.0
-    DEPTH = 7.5
-    DRAFT = 5.5
+    LOA = get_val("LOA", 88.0)
+    LBP = get_val("LBP", 82.0)
+    DEPTH = get_val("D", 7.5)
+    DRAFT = get_val("T", 5.5)
+    ER_LEN = get_val("ER_LEN", 18.0)
     
     # Longitudinal Stations (X-Axis)
     X_AP = 0.0
@@ -92,7 +99,7 @@ def generate_ship_coordinates():
        - Propeller: At X=2.5, Y=2.0.
        - Funnel: On top of superstructure.
 
-       Give labels to not all but most components with their name and dont make the labels so big that it overlaps the geometry. make them small and readable.
+       Give labels to most important components like collision bulkhead and compartments and all and dont make the labels so big that it overlaps the geometry. make them small and readable.
 
     **OUTPUT JSON:**
     {{

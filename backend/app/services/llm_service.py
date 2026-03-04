@@ -7,11 +7,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # ==============================
 # CONFIG
 # ==============================
-MODEL_NAME = "google/gemma-3-12b-it" # Or your preferred model
+MODEL_NAME = "arcee-ai/trinity-large-preview:free" # Or your preferred model
 CHUNK_SIZE = 12000
 CHUNK_OVERLAP = 1500
 MAX_RETRIES = 3
-MAX_THREADS = 15 # Number of chunks to process in parallel
+MAX_THREADS = 2 # Number of chunks to process in parallel
 
 # ==============================
 # TEXT CHUNKER

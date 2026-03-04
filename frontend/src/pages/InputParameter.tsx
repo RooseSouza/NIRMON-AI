@@ -148,7 +148,7 @@ const InputParameter: React.FC = () => {
 
         if (response.ok) {
             const targetId = existingGaInputId || result.ga_input_id;
-            navigate(`/projects/${id}/ga_input_decks`, { state: { gaInputId: targetId } });
+            navigate(`/projects/${id}/hull-geometry`, { state: { gaInputId: targetId } });
         } else {
             setError(result.error || "Failed to save data.");
         }

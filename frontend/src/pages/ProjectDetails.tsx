@@ -28,36 +28,47 @@ const ProjectDetails: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [hasGaInput, setHasGaInput] = useState(false);
 
+  const [designPreview, setDesignPreview] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
   // New State for Date Validation Error
   const [dateError, setDateError] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
-
+      
       try {
-        const projectRes = await fetch(
-          `http://127.0.0.1:5000/api/projects/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
+        // 1. Fetch Project Details (Existing)
+        const projectRes = await fetch(`http://127.0.0.1:5000/api/projects/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
         if (projectRes.ok) {
-          const data = await projectRes.json();
-          setProject(data);
-        } else {
-          console.error("Project not found");
+            setProject(await projectRes.json());
         }
 
-        const gaRes = await fetch(
-          `http://127.0.0.1:5000/api/gainputs/project/${id}/latest`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+        // 2. Check GA Inputs (Existing)
+        const gaRes = await fetch(`http://127.0.0.1:5000/api/gainputs/project/${id}/latest`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        setHasGaInput(gaRes.ok);
 
+        // 3. FETCH DESIGN PREVIEW (New)
         if (gaRes.ok) {
-          setHasGaInput(true);
-        } else {
-          setHasGaInput(false);
+            setPreviewLoading(true);
+            const previewRes = await fetch(`http://127.0.0.1:5000/api/generation/preview/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            
+            if (previewRes.ok) {
+                const previewData = await previewRes.json();
+                if (previewData.exists) {
+                    setDesignPreview(previewData.svg);
+                }
+            }
+            setPreviewLoading(false);
         }
+
       } catch (error) {
         console.error("API Error:", error);
       } finally {
@@ -344,10 +355,34 @@ const ProjectDetails: React.FC = () => {
           </div>
         </div>
 
-        <div className="md:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400">
-          <div className="text-center">
-            <Ship className="w-16 h-16 mx-auto mb-4 text-gray-200" />
-            <p className="font-semibold">GA Model Viewer Placeholder</p>
+        {/* Right Side: GA Model Viewer */}
+        <div className="md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+          <div className="flex justify-between items-center mb-4">
+             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">General Arrangement Preview</h3>
+             {designPreview && <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded font-mono">DXF Generated</span>}
+          </div>
+
+          <div className="flex-1 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative min-h-[400px]">
+            
+            {previewLoading ? (
+                <div className="flex flex-col items-center text-blue-600">
+                    <Loader2 size={32} className="animate-spin mb-2" />
+                    <span className="text-sm font-medium">Loading Blueprint...</span>
+                </div>
+            ) : designPreview ? (
+                // ✅ Render the SVG safely
+                <div 
+                  className="w-full h-full p-4 [&>svg]:w-full [&>svg]:h-full"
+                  dangerouslySetInnerHTML={{ __html: designPreview }} 
+                />
+            ) : (
+                // Placeholder if no design exists
+                <div className="text-center text-gray-400">
+                    <Ship className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                    <p className="font-semibold">No Design Generated Yet</p>
+                    <p className="text-sm mt-1">Complete the parameters to generate a GA Plan.</p>
+                </div>
+            )}
           </div>
         </div>
       </div>

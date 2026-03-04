@@ -3,6 +3,7 @@ from ezdxf.enums import TextEntityAlignment
 from ezdxf.addons.drawing import Frontend, RenderContext
 from ezdxf.addons.drawing.matplotlib import MatplotlibBackend
 import io
+import os
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -27,7 +28,7 @@ def sanitize_point_list(data):
             clean_points.append((safe_float(item[0]), safe_float(item[1])))
     return clean_points
 
-def create_dxf_from_json(geometry_data):
+def create_dxf_from_json(geometry_data, project_id):
     try:
         doc = ezdxf.new()
         msp = doc.modelspace()
@@ -120,11 +121,22 @@ def create_dxf_from_json(geometry_data):
                         text.set_placement((x, y), align=TextEntityAlignment.MIDDLE_CENTER)
 
         # Save & Convert
-        doc.saveas("generated_design.dxf")
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../static/outputs'))
+        os.makedirs(base_dir, exist_ok=True)
+
+        # 2. Save DXF
+        dxf_filename = f"{project_id}.dxf"
+        dxf_path = os.path.join(base_dir, dxf_filename)
+        doc.saveas(dxf_path)
+
+        # 3. Save SVG (For Frontend Display)
+        svg_filename = f"{project_id}.svg"
+        svg_path = os.path.join(base_dir, svg_filename)
 
         fig = plt.figure(figsize=(20, 8))
         ax = fig.add_axes([0, 0, 1, 1])
         ax.set_axis_off()
+        
         ctx = RenderContext(doc)
         out = MatplotlibBackend(ax)
         Frontend(ctx, out).draw_layout(msp, finalize=True)
@@ -133,13 +145,19 @@ def create_dxf_from_json(geometry_data):
         ax.margins(0.1)
         ax.set_aspect('equal', adjustable='box')
 
+        # Save to file
+        fig.savefig(svg_path, format='svg')
+        
+        # Also return string for immediate response
         img_buffer = io.StringIO()
         fig.savefig(img_buffer, format='svg')
-        svg_data = img_buffer.getvalue()
+        svg_content = img_buffer.getvalue()
         plt.close(fig)
         
-        return svg_data, "generated_design.dxf"
+        return svg_content, dxf_filename
 
     except Exception as e:
         print(f"❌ DXF Error: {str(e)}")
-        return f'<svg><text y="20" fill="red">Error: {str(e)}</text></svg>', ""
+        import traceback
+        traceback.print_exc()
+        return "", ""

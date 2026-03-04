@@ -1,0 +1,1118 @@
+{
+  "rules": [
+    {
+      "category": "Bar Keel",
+      "title": "Bar Keel Scantlings",
+      "description": "Minimum depth and thickness requirements for bar keels.",
+      "formulas": [
+        {
+          "left_side": "depth",
+          "operator": ">=",
+          "right_side": "75 + 0.75 * L",
+          "variables": {
+            "L": "Length of ship [m]",
+            "depth": "Depth of bar keel [mm]"
+          }
+        },
+        {
+          "left_side": "thickness",
+          "operator": ">=",
+          "right_side": "10 + 0.4 * L",
+          "variables": {
+            "thickness": "Thickness of bar keel [mm]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Stem",
+      "title": "Stem Scantlings and Diaphragms",
+      "description": "Cross-sectional area and thickness requirements for bar and plate stems, including horizontal diaphragm spacing.",
+      "conditions": [
+        "Plate stems are to be supported by horizontal diaphragms spaced not more than 1.0 m apart."
+      ],
+      "formulas": [
+        {
+          "left_side": "area",
+          "operator": ">=",
+          "right_side": "MAX(0.6 * L, 12)",
+          "variables": {
+            "area": "Cross sectional area of bar stem below summer load waterline [cm²]"
+          }
+        },
+        {
+          "left_side": "thickness",
+          "operator": ">=",
+          "right_side": "0.08 * L + 5.0",
+          "variables": {
+            "thickness": "Thickness of plate stem below summer load waterline [mm]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Stern Frames",
+      "title": "Stern Frames General Specifications",
+      "description": "General dimensional rules for fillets and web spacing on stern frames.",
+      "conditions": [
+        "All fillets are to have adequate radii, not less than 50 to 75 mm.",
+        "Fabricated and cast steel sternframes must be strengthened by webs spaced not more than 700 mm apart."
+      ]
+    },
+    {
+      "category": "Stern Frames",
+      "title": "Propeller Post Scantlings (Forged, Fabricated, and Cast Steel)",
+      "description": "Scantling dimension formulas for different types of propeller posts and propeller boss.",
+      "formulas": [
+        {
+          "left_side": "Area (Forged, L < 60)",
+          "operator": ">=",
+          "right_side": "(8 + 0.4 * L) * T",
+          "variables": {
+            "T": "Draft [m]",
+            "L": "Length [m]"
+          }
+        },
+        {
+          "left_side": "Area (Forged, L > 60)",
+          "operator": ">=",
+          "right_side": "32 * T"
+        },
+        {
+          "left_side": "length (Fabricated)",
+          "operator": ">=",
+          "right_side": "150 * sqrt(T)"
+        },
+        {
+          "left_side": "width (Fabricated)",
+          "operator": ">=",
+          "right_side": "100 * sqrt(T)"
+        },
+        {
+          "left_side": "radius (Fabricated)",
+          "operator": ">=",
+          "right_side": "18 * sqrt(T)"
+        },
+        {
+          "left_side": "t1 (Fabricated)",
+          "operator": ">=",
+          "right_side": "11 * sqrt(T)"
+        },
+        {
+          "left_side": "tw (Fabricated Web)",
+          "operator": ">=",
+          "right_side": "5 * sqrt(T)"
+        },
+        {
+          "left_side": "length (Cast Steel)",
+          "operator": ">=",
+          "right_side": "125 * sqrt(T)"
+        },
+        {
+          "left_side": "width (Cast Steel)",
+          "operator": ">=",
+          "right_side": "85 * sqrt(T)"
+        },
+        {
+          "left_side": "radius (Cast Steel)",
+          "operator": ">=",
+          "right_side": "20 * sqrt(T)"
+        },
+        {
+          "left_side": "t1 (Cast Steel)",
+          "operator": ">=",
+          "right_side": "12 * sqrt(T)"
+        },
+        {
+          "left_side": "t2 (Cast Steel)",
+          "operator": ">=",
+          "right_side": "14 * sqrt(T)"
+        },
+        {
+          "left_side": "tw (Cast Steel Web)",
+          "operator": ">=",
+          "right_side": "7 * sqrt(T)"
+        },
+        {
+          "left_side": "tb (Propeller Boss Thickness)",
+          "operator": ">=",
+          "right_side": "0.25 * dts + 12",
+          "variables": {
+            "dts": "Diameter of tailshaft [mm]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Sole Piece",
+      "title": "Sole Piece Section Modulus and Area",
+      "description": "Calculations for transverse and vertical bending modulus and sectional area of the sole piece.",
+      "formulas": [
+        {
+          "left_side": "ZT",
+          "operator": ">=",
+          "right_side": "(1 / 90) * (c * Fr * x / b)",
+          "variables": {
+            "ZT": "Section modulus against transverse bending [cm³]"
+          }
+        },
+        {
+          "left_side": "Zv",
+          "operator": ">=",
+          "right_side": "ZT / 2",
+          "variables": {
+            "Zv": "Section modulus against vertical bending [cm³]"
+          }
+        },
+        {
+          "left_side": "As",
+          "operator": ">=",
+          "right_side": "(1 / 5400) * (c * Fr / b)",
+          "variables": {
+            "As": "Sectional area of sole piece [cm²]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Shaft Brackets",
+      "title": "Shaft Brackets and Shell Plating Requirements",
+      "description": "Thickness, area, and section modulus for solid or built-up shaft brackets and adjoining shell plating.",
+      "conditions": [
+        "Shell plating in way of shaft brackets must be >= 1.5 times the Rule bottom shell plating thickness amidships."
+      ],
+      "formulas": [
+        {
+          "left_side": "t",
+          "operator": ">=",
+          "right_side": "0.4 * dts",
+          "variables": {
+            "t": "Bracket arm thickness [mm]",
+            "dts": "Diameter of tailshaft [mm]"
+          }
+        },
+        {
+          "left_side": "A",
+          "operator": ">=",
+          "right_side": "4.5 * dts^2 * 10^-3",
+          "variables": {
+            "A": "Bracket arm area [cm²]"
+          }
+        },
+        {
+          "left_side": "ZT",
+          "operator": ">=",
+          "right_side": "30 * dts^3 * 10^-6",
+          "variables": {
+            "ZT": "Bracket arm section modulus [cm³]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "General Rules",
+      "title": "Frame Spacing Limits",
+      "description": "Standard limits for transverse, longitudinal, and peak frame spacing.",
+      "formulas": [
+        {
+          "left_side": "Transverse Spacing",
+          "operator": "=",
+          "right_side": "450 + 2 * L",
+          "variables": {
+            "L": "Length [m]"
+          }
+        },
+        {
+          "left_side": "Longitudinal Spacing",
+          "operator": "=",
+          "right_side": "550 + 2 * L"
+        },
+        {
+          "left_side": "Peak Frame Spacing",
+          "operator": "<=",
+          "right_side": "600",
+          "variables": {
+            "Peak Frame Spacing": "Maximum spacing in aft and fore peaks [mm]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "General Rules",
+      "title": "Corrosion Additions",
+      "description": "Specific corrosion additions based on tank or hold type.",
+      "conditions": [
+        "Ballast tank: tc = 1.5 mm",
+        "Cargo oil tank: tc = 1.5 mm",
+        "Hold of dry bulk cargo carriers: tc = 2.0 mm"
+      ]
+    },
+    {
+      "category": "Plating and Stiffeners",
+      "title": "Plating and Stiffener Requirements",
+      "description": "Minimum thickness for plating and section modulus for stiffeners/girders subjected to lateral pressure.",
+      "formulas": [
+        {
+          "left_side": "thickness (t)",
+          "operator": ">=",
+          "right_side": "((15.8 * s * sqrt(p)) / sqrt(sigma)) * 10^-3 + tc",
+          "variables": {
+            "t": "Plating thickness [mm]",
+            "s": "Spacing [mm]",
+            "p": "Design pressure",
+            "sigma": "Allowable stress",
+            "tc": "Corrosion addition [mm]"
+          }
+        },
+        {
+          "left_side": "Z (Stiffener)",
+          "operator": ">=",
+          "right_side": "((s * p * l^2) / (m * sigma)) + Zc",
+          "variables": {
+            "Z": "Section modulus of stiffener [cm³]",
+            "l": "Span [m]",
+            "Zc": "Corrosion addition to section modulus"
+          }
+        },
+        {
+          "left_side": "Z (Girder)",
+          "operator": ">=",
+          "right_side": "((b * p * S^2 * 10^3) / (m * sigma)) + Zc",
+          "variables": {
+            "Z": "Section modulus of girder [cm³]",
+            "b": "Breadth load area",
+            "S": "Span of girder"
+          }
+        }
+      ]
+    },
+    {
+      "category": "End Attachments",
+      "title": "Bracket End Attachments",
+      "description": "Dimensional rules for unstiffened, flanged, and girder brackets.",
+      "conditions": [
+        "The arm length of an unstiffened triangular end panel of a bracket is generally not to exceed 100 * t [mm]."
+      ],
+      "formulas": [
+        {
+          "left_side": "arm_length (a, b)",
+          "operator": ">=",
+          "right_side": "0.8 * lb"
+        },
+        {
+          "left_side": "sum_arm_lengths (a + b)",
+          "operator": ">=",
+          "right_side": "2.0 * lb"
+        },
+        {
+          "left_side": "Thickness (Unflanged)",
+          "operator": ">=",
+          "right_side": "(4.0 + 0.3 * sqrt(Z)) + tc"
+        },
+        {
+          "left_side": "Thickness (Flanged)",
+          "operator": ">=",
+          "right_side": "(3.0 + 0.25 * sqrt(Z)) + tc"
+        },
+        {
+          "left_side": "Flange Width (w)",
+          "operator": ">=",
+          "right_side": "MAX(40 + Z / 25, 50)"
+        },
+        {
+          "left_side": "Girder Bracket Arm Length (a)",
+          "operator": ">=",
+          "right_side": "83 * sqrt(Z / t)"
+        },
+        {
+          "left_side": "Girder Bracket Face Plate Area (Af)",
+          "operator": ">=",
+          "right_side": "0.001 * lf * t"
+        }
+      ]
+    },
+    {
+      "category": "Longitudinal Strength",
+      "title": "Longitudinal Strength Modulus and Bending Moments",
+      "description": "Requirements for critical buckling stress, still water, and wave bending moments.",
+      "conditions": [
+        "Still water bending moments must be calculated for ships with unusual weight distribution or L >= 60 m."
+      ],
+      "formulas": [
+        {
+          "left_side": "sigma_cr",
+          "operator": ">=",
+          "right_side": "sigma_c / eta",
+          "variables": {
+            "sigma_cr": "Critical buckling stress"
+          }
+        },
+        {
+          "left_side": "Ms",
+          "operator": ">=",
+          "right_side": "0.375 * L^2 * B",
+          "variables": {
+            "Ms": "Still water bending moment [kN-m]",
+            "B": "Breadth [m]"
+          }
+        },
+        {
+          "left_side": "Mw",
+          "operator": "=",
+          "right_side": "C * L^2 * B",
+          "variables": {
+            "Mw": "Rule vertical wave bending moment [kN-m]",
+            "C": "Wave coefficient"
+          }
+        },
+        {
+          "left_side": "Z",
+          "operator": ">=",
+          "right_side": "((Ms + Mw) / sigma_L) * 10^3",
+          "variables": {
+            "Z": "Hull section modulus [cm³]",
+            "sigma_L": "Allowable longitudinal stress"
+          }
+        },
+        {
+          "left_side": "In",
+          "operator": ">=",
+          "right_side": "3 * L * Z",
+          "variables": {
+            "In": "Moment of inertia of hull section [cm⁴]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Openings and Closings",
+      "title": "Openings and Hatchway Corners",
+      "description": "Rules for structural reinforcements around circular and streamlined openings.",
+      "formulas": [
+        {
+          "left_side": "A",
+          "operator": ">=",
+          "right_side": "2.5 * b * t",
+          "variables": {
+            "A": "Sectional area for circular opening edge reinforcement (diameter >= 0.325m) [cm²]"
+          }
+        },
+        {
+          "left_side": "r (Circular Corner Radius)",
+          "operator": ">=",
+          "right_side": "MAX(0.05 * b, 0.3)",
+          "variables": {
+            "r": "Radius of circular hatchway corner [m]",
+            "b": "Breadth of opening [m]"
+          }
+        },
+        {
+          "left_side": "a (Streamlined Corner Extension)",
+          "operator": ">=",
+          "right_side": "MAX(0.05 * b, 0.3)",
+          "variables": {
+            "a": "Transverse extension of curvature for streamlined shape [m]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Bottom Structure",
+      "title": "Design Pressure on Outer Bottom",
+      "description": "Calculates the design pressure on the outer bottom based on the zone and length of the ship.",
+      "conditions": [
+        "Zone 1: T1 = T + 1.0 [m] for L > 60 [m]",
+        "Zone 1: T1 = T + 0.6 [m] for L < 20 [m]",
+        "Zone 2: T1 = T + 0.6 [m]",
+        "Zone 3: T1 = T + 0.3 [m]"
+      ],
+      "formulas": [
+        {
+          "left_side": "p",
+          "operator": "=",
+          "right_side": "10 * T1",
+          "variables": {
+            "p": "Design pressure [kN/m²]",
+            "T1": "Draft modifier based on zone [m]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Bottom Structure",
+      "title": "Design Pressure on Watertight Floors and Girders",
+      "description": "Calculates the design pressure on watertight floors and girders in double bottom tanks.",
+      "formulas": [
+        {
+          "left_side": "p",
+          "operator": "=",
+          "right_side": "MAX(6.7 * h_p, 10 * (h_s + 1))",
+          "variables": {
+            "p": "Design pressure [kN/m²]",
+            "h_p": "Vertical distance from load point to top of air pipe [m]",
+            "h_s": "Vertical distance from load point to top of tank [m]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Bottom Structure",
+      "title": "Bottom and Inner Bottom Plating Thickness",
+      "description": "Determines the minimum thickness of the bottom and inner bottom plating.",
+      "conditions": [
+        "Inner bottom thickness t >= 6.0 mm"
+      ],
+      "formulas": [
+        {
+          "left_side": "t_bottom",
+          "operator": "=",
+          "right_side": "(t_o + 0.04 * L) * sqrt(k) + t_c",
+          "variables": {
+            "t_bottom": "Bottom plating thickness [mm]",
+            "t_o": "4.0 mm in general",
+            "k": "Material factor",
+            "t_c": "Corrosion addition [mm]"
+          }
+        },
+        {
+          "left_side": "t_inner",
+          "operator": "=",
+          "right_side": "(t_o + 0.03 * L) * sqrt(k) + t_c",
+          "variables": {
+            "t_inner": "Inner bottom plating thickness [mm]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Bottom Structure",
+      "title": "Single Bottom - Transverse Framing Section Modulus",
+      "description": "Section modulus requirement for plate floors fitted at every frame.",
+      "formulas": [
+        {
+          "left_side": "Z_cargo",
+          "operator": "=",
+          "right_side": "0.006 * s * l_f^2 * T1",
+          "variables": {
+            "Z_cargo": "Section modulus in cargo holds [cm³]",
+            "s": "Spacing of stiffeners [mm]",
+            "l_f": "Span of floor [m]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Bottom Structure",
+      "title": "Engine Seatings - Top Plate Area",
+      "description": "Recommended scantlings for engine girder face plate, web, and floors.",
+      "conditions": [
+        "P < 1500 kW",
+        "R > 1200 RPM"
+      ],
+      "formulas": [
+        {
+          "left_side": "A",
+          "operator": "=",
+          "right_side": "20 + 120 * (P / R)",
+          "variables": {
+            "A": "Top plate area [cm²]",
+            "P": "Maximum power of the engine [kW]",
+            "R": "RPM of engine at maximum power"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Side Structure",
+      "title": "Side Shell Plating Thickness and Modulus",
+      "description": "Calculates the minimum thickness and modulus for side shell plating.",
+      "formulas": [
+        {
+          "left_side": "t",
+          "operator": "=",
+          "right_side": "(4 + 0.04 * L) * sqrt(k) + t_c",
+          "variables": {
+            "t": "Thickness of side shell [mm]"
+          }
+        },
+        {
+          "left_side": "Z",
+          "operator": "=",
+          "right_side": "(s * p * l^2) / (12 * sigma) + Z_c",
+          "variables": {
+            "Z": "Section modulus of side shell longitudinals [cm³]",
+            "p": "Applicable design pressure [kN/m²]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Deck Structure",
+      "title": "Deck Pressures and Pillars",
+      "description": "Calculates design pressure on exposed decks, vehicle decks, and tubular pillars thickness.",
+      "conditions": [
+        "Weather Deck p >= 5 kN/m²",
+        "Pillars d < 300 mm: t = 4.5 + 0.015 * d",
+        "Pillars d >= 300 mm: t = 0.03 * d"
+      ],
+      "formulas": [
+        {
+          "left_side": "p_weather",
+          "operator": "=",
+          "right_side": "H1 - 10 * h_o",
+          "variables": {
+            "p_weather": "Design pressure on weather deck [kN/m²]",
+            "H1": "Height factor from zone table",
+            "h_o": "Vertical distance from max load waterline to deck [m]"
+          }
+        },
+        {
+          "left_side": "p_wheel",
+          "operator": "=",
+          "right_side": "(12.5 * W) / (n * a * b) * 10^6",
+          "variables": {
+            "p_wheel": "Wheel loading pressure [kN/m²]",
+            "W": "Maximum axle load [t]",
+            "n": "Number of load areas per axle",
+            "a": "Extent of load area parallel to stiffener",
+            "b": "Extent of load area perpendicular to stiffener"
+          }
+        },
+        {
+          "left_side": "t_pillar",
+          "operator": "=",
+          "right_side": "4.5 + 0.015 * d",
+          "variables": {
+            "t_pillar": "Minimum wall thickness of pillar [mm]",
+            "d": "Diameter of the pillar [mm]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Bulkheads",
+      "title": "Watertight Bulkhead Loads and Thickness",
+      "description": "Calculates the design pressure and plating thickness for ordinary watertight bulkheads.",
+      "conditions": [
+        "t >= (4.0 + 0.01 * L) + t_c"
+      ],
+      "formulas": [
+        {
+          "left_side": "p",
+          "operator": "=",
+          "right_side": "10 * h",
+          "variables": {
+            "p": "Design pressure [kN/m²]",
+            "h": "Vertical distance from loadpoint to uppermost continuous deck [m]"
+          }
+        },
+        {
+          "left_side": "t",
+          "operator": "=",
+          "right_side": "15.8 * s * sqrt(p / sigma) * 10^-3 + t_c",
+          "variables": {
+            "t": "Bulkhead thickness [mm]",
+            "sigma": "Allowable stress [N/mm²]",
+            "s": "Spacing of stiffeners [mm]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Superstructures",
+      "title": "Bulwark Scantlings",
+      "description": "Section modulus at the bottom of the bulwark stay.",
+      "conditions": [
+        "Bulwark plating thickness >= 4.0 mm"
+      ],
+      "formulas": [
+        {
+          "left_side": "Z",
+          "operator": "=",
+          "right_side": "(33 + 0.44 * L) * h^2 * s",
+          "variables": {
+            "Z": "Section modulus [cm³]",
+            "h": "Height of the bulwark [m]",
+            "s": "Spacing of bulwark stays [m]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Openings and Closing Appliances",
+      "title": "Steel Hatchcover Plating",
+      "description": "Minimum thickness of steel hatch cover plating.",
+      "conditions": [
+        "Thickness must be at least 3 mm"
+      ],
+      "formulas": [
+        {
+          "left_side": "t",
+          "operator": "=",
+          "right_side": "15.8 * s * sqrt(p / sigma) * 10^-3 + t_c",
+          "variables": {
+            "t": "Hatch cover thickness [mm]",
+            "p": "Design pressure [kN/m²]",
+            "sigma": "Allowable stress [N/mm²]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Rudders",
+      "title": "Rudder Force, Torque, and Stock Diameter",
+      "description": "Formulas to determine dimensions and forces on the rudder system.",
+      "conditions": [
+        "V is not to be taken as less than 6 knots",
+        "r = x_c - f",
+        "r >= 0.1 * C"
+      ],
+      "formulas": [
+        {
+          "left_side": "F_r",
+          "operator": "=",
+          "right_side": "132 * K1 * K2 * K3 * A * V^2",
+          "variables": {
+            "F_r": "Rudder force [N]",
+            "A": "Area of rudder blade [m²]",
+            "V": "Maximum achievable ship speed [knots]",
+            "K1": "Aspect ratio factor",
+            "K2": "Profile factor",
+            "K3": "Location factor"
+          }
+        },
+        {
+          "left_side": "Q_r",
+          "operator": "=",
+          "right_side": "F_r * r",
+          "variables": {
+            "Q_r": "Rudder torque [N-m]",
+            "r": "Distance [m]"
+          }
+        },
+        {
+          "left_side": "d_u",
+          "operator": "=",
+          "right_side": "4.0 * cbrt(Q_r)",
+          "variables": {
+            "d_u": "Diameter of rudder stock [mm]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Anchoring and Mooring Equipment",
+      "title": "Bow Anchors Total Mass",
+      "description": "Calculates the total mass of the bow anchors for cargo vessels.",
+      "formulas": [
+        {
+          "left_side": "P",
+          "operator": "=",
+          "right_side": "k * B * T",
+          "variables": {
+            "P": "Total mass of bow anchors",
+            "k": "c * (L_oa / (8 * B))^0.5",
+            "B": "Breadth [m]",
+            "T": "Draft [m]",
+            "c": "Coefficient based on Deadweight"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Piping Design Requirements",
+      "title": "Piping Materials, Thickness, and Joints",
+      "description": "Rules for steel, copper, cast iron, and plastic pipes, including allowed temperatures and joint specifications.",
+      "conditions": [
+        "Threaded Sleeve Joints: Nominal bore <= 25 mm : Max pressure = 1.2 N/mm², Max temperature <= 260°C",
+        "Threaded Sleeve Joints: 25 mm < Nominal bore <= 40 mm : Max pressure = 1.0 N/mm², Max temperature <= 260°C",
+        "Threaded Sleeve Joints: 80 mm < Nominal bore <= 100 mm : Max pressure = 0.7 N/mm², Max temperature <= 260°C",
+        "Pipe NDE Required: Outside diameter >= 101.6 mm",
+        "Post-Weld Heat Treatment: Pipe thickness > 30 mm OR Carbon content > 0.25%",
+        "Service temperature (Copper and Aluminum Brass) <= 200°C",
+        "Service temperature (Copper-Nickel) <= 300°C",
+        "Nodular/Spheroidal cast iron minimum elongation >= 12%",
+        "Grey cast iron = NOT PERMITTED for steam, fire, blowdown, fuel tanks, etc.",
+        "Plastic Pipes: Fluid/Environment temperature <= 60°C AND >= 0°C (NOT PERMITTED in safety-critical systems)",
+        "Hose bursting pressure >= 5 * Maximum working pressure",
+        "Pipe hydraulic test pressure >= 1.5 * Design pressure (Minimum >= 0.35 N/mm²)"
+      ],
+      "formulas": [
+        {
+          "left_side": "t_steel",
+          "operator": "=",
+          "right_side": "((P * D) / (2 * sigma * e + P) + c) * (100 / (100 - a))",
+          "variables": {
+            "t_steel": "Minimum thickness of straight steel pipe [mm]",
+            "P": "Design pressure [N/mm²]",
+            "D": "Outside diameter [mm]",
+            "sigma": "Maximum permissible design stress [N/mm²]",
+            "e": "Weld efficiency factor",
+            "c": "Corrosion allowance [mm]",
+            "a": "Percentage negative manufacturing tolerance"
+          }
+        },
+        {
+          "left_side": "t_copper",
+          "operator": "=",
+          "right_side": "(P * D) / (2 * sigma_e + P) + c",
+          "variables": {
+            "t_copper": "Minimum straight copper pipe thickness",
+            "sigma_e": "Allowable stress",
+            "c": "Corrosion allowance (0.8 mm for Cu/Al-Brass, 0.5 mm for Cu-Ni)"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Pumping and Piping Systems",
+      "title": "Bilge, Fuel, and Cooling Systems",
+      "description": "Rules for valve operations, bilge pump capacities, branch lines, and fuel/oil system safety.",
+      "conditions": [
+        "Valve Closing direction = Right-hand (Clockwise)",
+        "Vessel list <= 5 degrees for bilge drainage",
+        "Minimum allowable bilge pipe diameter >= 40 mm",
+        "Max suction lift (hand pumps) <= 7.3 m",
+        "Vent pipe cross-sectional area >= 1.25 * Filling pipe effective area",
+        "Fuel oil flash point >= 60°C (Emergency generator fuel >= 43°C)",
+        "Main engine output > 370 kW (500 shp) : Standby cooling/lube pump REQUIRED"
+      ],
+      "formulas": [
+        {
+          "left_side": "d_m",
+          "operator": "=",
+          "right_side": "1.5 * sqrt(L * (B + D)) + 25",
+          "variables": {
+            "d_m": "Main bilge line internal diameter (mm)",
+            "D": "Depth of ship"
+          }
+        },
+        {
+          "left_side": "d_b",
+          "operator": "=",
+          "right_side": "2.0 * sqrt(C * (B + D)) + 25",
+          "variables": {
+            "d_b": "Branch bilge line internal diameter (mm)",
+            "C": "Length of compartment"
+          }
+        },
+        {
+          "left_side": "Q",
+          "operator": "=",
+          "right_side": "5.75 * 10^-3 * d^2",
+          "variables": {
+            "Q": "Pump capacity (m³/hour)",
+            "d": "Internal diameter of bilge pipe (mm)"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Prime Movers and Propulsion Shafting",
+      "title": "Shafts and Stern Tubes",
+      "description": "Formulas for shaft diameters, coupling dimensions, and stern tube bearing limits.",
+      "conditions": [
+        "Coupling flange thickness >= 0.25 * Tailshaft diameter",
+        "Coupling fillet radius at base >= 0.08 * Shaft diameter",
+        "Water-lubricated bearing length >= 4 * Rule diameter",
+        "Oil-lubricated bearing length >= 2 * Rule diameter",
+        "Oil-lubricated bearing max pressure <= 0.8 N/mm²"
+      ],
+      "formulas": [
+        {
+          "left_side": "d",
+          "operator": "=",
+          "right_side": "103.5 * k * a * cbrt((410 * P) / ((U + 160) * R))",
+          "variables": {
+            "d": "Intermediate/Thrust Shaft diameter",
+            "k": "Design factor",
+            "a": "Material factor",
+            "P": "Power",
+            "U": "Tensile strength",
+            "R": "RPM"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Boilers and Pressure Vessels",
+      "title": "Pressure Vessel Classifications and Margins",
+      "description": "Temperature design margins and class definitions based on pressure/thickness.",
+      "conditions": [
+        "Unheated parts : Design Temp = Max Fluid Temp",
+        "Heated by hot gases : Design Temp = Max Fluid Temp + 25°C",
+        "Combustion chambers : Design Temp = Max Fluid Temp + 50°C",
+        "Furnaces/Fire boxes : Design Temp = Max Fluid Temp + 90°C",
+        "Class 1 : Pressure > 3.5 bar OR Thickness > 38 mm",
+        "Class 2 : Pressure <= 3.5 bar AND (16 mm <= Thickness <= 38 mm)",
+        "Class 3 : Thickness <= 16 mm AND Material Temp <= 150°C"
+      ]
+    },
+    {
+      "category": "Steering Gears",
+      "title": "Steering Gear Operational and Strength Limits",
+      "description": "Performance parameters and structural limits for manual and powered steering.",
+      "conditions": [
+        "Rudder turn angle >= 35 degrees (on either side)",
+        "Fully powered turn rate >= 4 degrees / second",
+        "Manual max effort <= 16 kgf",
+        "Manual 1 complete handwheel turn >= 3 degrees of rudder angle",
+        "Powered gear REQUIRED IF : Rudder stock diameter > 150 mm",
+        "Secondary control engagement time <= 5 seconds",
+        "Combined equivalent stress in tillers/vanes <= 138 N/mm²"
+      ]
+    },
+    {
+      "category": "Electrical Installations",
+      "title": "Voltages, Emergency Power, and Wiring",
+      "description": "Electrical limits, emergency capacity, and general cable characteristics.",
+      "conditions": [
+        "Power/Heating Max Voltage <= 500 V",
+        "Lighting/Cabins Max Voltage <= 250 V",
+        "Voltage drop from main busbars <= 6%",
+        "Emergency battery supply time >= 30 minutes",
+        "> 15 Amp circuits : Max points <= 1",
+        "<= 15 Amp circuits (24-55V) : Max points <= 10",
+        "<= 15 Amp circuits (110-127V) : Max points <= 14",
+        "<= 15 Amp circuits (220-250V) : Max points <= 18",
+        "Bending radius (small cables) >= 4 * Diameter",
+        "Bending radius (other cables) >= 6 * Diameter",
+        "Current rating multiplier (if > 6 cables bunched) = 0.85",
+        "Insulation resistance (at 500V DC) >= 1 Megaohm",
+        "Generator voltage regulation <= 2.5%",
+        "Parallel load sharing difference <= 15% of rated output"
+      ]
+    },
+    {
+      "category": "Fire Protection, Detection and Extinction",
+      "title": "Fire Alarms, Equipment, and Extinguishing Systems",
+      "description": "Detailed rules on escape dimensions, detector coverage, pump capacities, and fixed agent concentrations.",
+      "conditions": [
+        "Engine/Boiler room escape routes >= 2",
+        "Escape trunk dimensions >= 0.6 m * 0.6 m",
+        "Heat Detector trigger temp >= 54°C AND <= 78°C (Max area <= 37 m²)",
+        "Smoke Detector trigger (visibility reduction) >= 2% AND <= 12.5% per meter (Max area <= 74 m²)",
+        "Fire pump capacity >= 10 m³/h",
+        "Hose length <= 18 m (Jet throw >= 12 m)",
+        "Portable extinguisher distance <= 10 m (walking distance)",
+        "Fixed CO2: Coverage >= 40% volume, Release <= 120s, Fill ratio <= 0.75 kg/l",
+        "Fixed HFC-227ea: Coverage >= 8% volume, Release <= 10s, Fill ratio <= 1.15 kg/l",
+        "Fixed IG-541: Coverage >= 44% AND <= 50% volume, Release <= 120s",
+        "Fixed FK-5-1-12: Coverage >= 4% (or 5.5% in special spaces), Release <= 10s, Fill ratio <= 1 kg/l",
+        "Water Mist/Sprinkler: Flow rate >= 5 liters/m²/minute, Duration >= 30 minutes"
+      ]
+    },
+    {
+      "category": "Dry Bulk Cargo Carriers",
+      "title": "Class Notations, Density, and Loading Pressures",
+      "description": "Rules for bulk carrier densities, angles of repose, cargo/flooding pressures, and single bottom floors.",
+      "conditions": [
+        "Class 'Bulk Carrier' : Cargo density (rho_f) >= 0.8 t/m³",
+        "Class 'Bulk Carrier Strengthened for heavy cargoes' : Cargo density (rho_f) >= 1.0 t/m³",
+        "Light bulk cargo angle of repose (delta) <= 20°; Cement <= 25°; Heavy cargo <= 35°",
+        "C = 1.0 for inner bottom; C = Tan²(45 - delta/2) for vertical bulkheads",
+        "Angle of corrugation (webs with plane of bulkhead) >= 55 degrees"
+      ],
+      "formulas": [
+        {
+          "left_side": "p_cargo",
+          "operator": "=",
+          "right_side": "12.5 * C * q",
+          "variables": {
+            "p_cargo": "Cargo pressure [kN/m²]",
+            "C": "Factor based on structure type",
+            "q": "Max of (rho_f * H) or (rho_f * hc) [t/m²]"
+          }
+        },
+        {
+          "left_side": "p_flooding",
+          "operator": "=",
+          "right_side": "10 * h",
+          "variables": {
+            "p_flooding": "Flooding pressure [kN/m²]",
+            "h": "Vertical distance from load point to deck at side [m]"
+          }
+        },
+        {
+          "left_side": "Z_leveled",
+          "operator": "=",
+          "right_side": "0.006 * s * l_e^2 * (rho_f * H - 0.3 * T)",
+          "variables": {
+            "Z_leveled": "Section modulus where cargo is leveled [cm³]",
+            "s": "Spacing of floors [mm]",
+            "l_e": "Span of floors between longitudinal bulkheads [m]",
+            "H": "Height from load point to hatch coaming top [m]"
+          }
+        },
+        {
+          "left_side": "Z_heaps",
+          "operator": "=",
+          "right_side": "0.006 * s * l_e^2 * (1.25 * rho_f * H - 0.3 * T)",
+          "variables": {
+            "Z_heaps": "Section modulus where cargo is loaded in heaps [cm³]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Tankers",
+      "title": "Tanker Design, Capacities, Stability, and Ventilation",
+      "description": "Rules on cargo tank sizing, intact/damage stability constraints, and safety triggers for tankers.",
+      "conditions": [
+        "Carriage temperature of liquid > 90°C : Thermal stress calculation REQUIRED",
+        "Length/Diameter ratio <= 7 for built-in cylindrical tanks",
+        "Service spaces below deck >= 20 changes of air per hour",
+        "Cargo pump room >= 30 changes of air per hour",
+        "Engine room max average temperature <= 40°C at 20°C ambient",
+        "Intact GZ >= 0.10 m (up to immersion)",
+        "Intact Area under GZ curve >= 0.024 m.rad",
+        "Intact GM >= 0.10 m",
+        "Longitudinal damage extent = 0.10 * L_oa (Minimum 5 m)",
+        "Transverse damage extent = 0.59 m (0.79 m for Type C/G)",
+        "Damage intermediate GZ >= 0.03 m, positive range >= 5 degrees",
+        "Damage final equilibrium heel <= 12 degrees",
+        "Level alarm device activation <= 90% filling",
+        "High level sensor for overflow protection <= 97.5% filling"
+      ],
+      "formulas": [
+        {
+          "left_side": "D_prime",
+          "operator": "=",
+          "right_side": "D + (h_t * (b_t / B) * (l_t / L))",
+          "variables": {
+            "D_prime": "Substituted depth for trunk deck vessels [m]",
+            "h_t": "Height of trunk [m]",
+            "b_t": "Trunk breadth [m]",
+            "l_t": "Trunk length [m]"
+          }
+        },
+        {
+          "left_side": "Max_Capacity (V_total <= 600)",
+          "operator": "=",
+          "right_side": "L_oa * B_oa * D_prime * 0.3",
+          "variables": {
+            "Max_Capacity": "Tank capacity [m³]"
+          }
+        },
+        {
+          "left_side": "Max_Capacity (600 < V <= 3750)",
+          "operator": "=",
+          "right_side": "180 + (L_oa * B_oa * D_prime - 600) * 0.0635"
+        },
+        {
+          "left_side": "Max_Capacity (V > 3750)",
+          "operator": "=",
+          "right_side": "380"
+        }
+      ]
+    },
+    {
+      "category": "Passenger Vessels",
+      "title": "Passenger Vessel Structure, Exits, and Safety Corridors",
+      "description": "Rules for bulkhead locations, watertight doors, exit counts, passage widths, and special notations (Ro-Ro, PRM).",
+      "conditions": [
+        "Collision bulkhead distance from FP >= 0.04 * LWL AND <= 0.04 * LWL + 2.0 m",
+        "Aft-peak bulkhead distance from aft intersection >= 1.4 m AND <= 0.04 * LWL + 2.0 m (for L > 25m)",
+        "Watertight doors remote closure time >= 30 seconds AND <= 60 seconds",
+        "Rooms for >= 30 passengers OR >= 12 sleeping berths : Minimum exits >= 2",
+        "Clear width of exits/doors/stairs >= 0.8 m (Cabins >= 0.7 m)",
+        "Clear height of exits/corridors >= 2.0 m",
+        "Total sum of exit/stair widths (if > 80 passengers) >= 0.01 m * number of passengers",
+        "Length of dead ends <= 2.0 m",
+        "Clear width between handrails <= 1.80 m (if only access >= 1.0 m)",
+        "Fixed bulwark or guard rail height >= 1.0 m",
+        "Operating period of emergency power >= 60 minutes",
+        "Automatic start/takeover time (auxiliary generators) <= 30 seconds",
+        "Height of alarm triggers above floor >= 0.85 m AND <= 1.10 m (Max 10m apart)",
+        "Max total surface area of undivided passenger spaces <= 800 m²",
+        "Fire extinguisher distribution: 1 per 120 m² floor area, OR 1 per 10 cabins",
+        "Water supply pressure at hydrants >= 300 kPa (Jet length >= 6m)",
+        "Ro-Ro: Electrical equipment height >= 450 mm above deck, Ventilation >= 10 air changes/hour",
+        "PRM (Reduced Mobility): Exits/Stairs >= 0.9m, Corridors >= 1.3m, Stair gradient <= 33 degrees, Sills <= 0.025m"
+      ]
+    },
+    {
+      "category": "Tugs",
+      "title": "Tug Design, Stability, and Towing Equipment",
+      "description": "Criteria for tug drafts, machinery casings, tow hook strength, stability under transverse forces, and bollard pull testing.",
+      "conditions": [
+        "Design Draught (T) >= 0.90 * Moulded Depth (D)",
+        "Exposed machinery casings height >= 900 mm",
+        "Casing scantlings >= 1.20 * Exposed deckhouse scantlings",
+        "Distance from lower edge of side scuttles to waterline >= 750 mm",
+        "Breaking strength of towing hook >= 1.50 * Breaking strength of towline",
+        "Bollard Pull Test: Vessel steady course >= 10 min, Uniform pull >= 10 min",
+        "Certified continuous bollard pull <= 0.50 * Breaking strength of supplied towline"
+      ],
+      "formulas": [
+        {
+          "left_side": "GZ'",
+          "operator": ">",
+          "right_side": "1.5 * (F_t * l_v) / Displacement",
+          "variables": {
+            "GZ'": "Righting lever at deck immersion or 30° [m]",
+            "F_t": "Transverse heeling force [tonnes]",
+            "l_v": "Vertical distance from prop center to towline center [m]",
+            "Displacement": "Displacement of the vessel [tonnes]"
+          }
+        },
+        {
+          "left_side": "F_t",
+          "operator": "=",
+          "right_side": "0.5 * BP_max",
+          "variables": {
+            "F_t": "Transverse heeling force [tonnes]",
+            "BP_max": "Maximum bollard pull [tonnes]"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Barges and Pontoons",
+      "title": "Barge Construction and Push/Tow Connections",
+      "description": "Rules for length calculation, hard chines, truss structures, and maximum stresses for towing elements.",
+      "conditions": [
+        "Diameter of round chine bar >= 3 * Bottom plate thickness",
+        "Coefficient 'm' for bottom girders section modulus = 6",
+        "Coefficient 'm' for deck girders section modulus = 8",
+        "Cross-sectional area of diagonals ~= 0.50 * Area of adjacent stanchion"
+      ],
+      "formulas": [
+        {
+          "left_side": "L",
+          "operator": "=",
+          "right_side": "0.97 * L_WL",
+          "variables": {
+            "L": "Rule length of non-propelled vessel without rudder [m]",
+            "L_WL": "Length of the load waterline [m]"
+          }
+        },
+        {
+          "left_side": "sigma",
+          "operator": "=",
+          "right_side": "100 / k",
+          "variables": {
+            "sigma": "Bending and normal stress [N/mm²]",
+            "k": "Material factor"
+          }
+        },
+        {
+          "left_side": "tau",
+          "operator": "=",
+          "right_side": "60 / k",
+          "variables": {
+            "tau": "Shear stress [N/mm²]"
+          }
+        },
+        {
+          "left_side": "Equivalent_stress",
+          "operator": "=",
+          "right_side": "120 / k",
+          "variables": {
+            "Equivalent_stress": "sqrt(sigma^2 + 3 * tau^2) [N/mm²]"
+          }
+        }
+      ]
+    }
+  ]
+}
