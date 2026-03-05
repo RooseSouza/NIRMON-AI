@@ -11,7 +11,7 @@ MODEL_NAME = "arcee-ai/trinity-large-preview:free" # Or your preferred model
 CHUNK_SIZE = 12000
 CHUNK_OVERLAP = 1500
 MAX_RETRIES = 3
-MAX_THREADS = 2 # Number of chunks to process in parallel
+MAX_THREADS = 7 # Number of chunks to process in parallel
 
 # ==============================
 # TEXT CHUNKER
@@ -47,44 +47,50 @@ def call_with_retry(client, payload):
 # ==============================
 def extract_chunk_rules(client, chunk_text):
     
-    # 1. NEW PROMPT FOR STRUCTURED FORMULAS
+    # 1. NEW HIGH-FIDELITY PROMPT
     system_prompt = """
-    You are an expert Naval Architect specializing in IRClass rules.
-    Your task is to analyze official regulations and extract ONLY explicit measurable technical constraints.
-
-    STRICT RULES:
-    1. Do NOT invent data. Extract only what is stated.
-    2. Convert word-based rules to structured logic.
-    3. If a rule specifies a range (e.g., 'between 5% and 8%'), create two separate rules for 'min' and 'max'.
-    4. For single-value rules (e.g., 'not exceeding 2.0m'), use the correct condition.
-    5. Preserve units exactly as written in the text.
+    You are a Senior Classification Society Surveyor (IRClass).
+    Your task is to extract mathematically precise design rules from the text provided.
     
-    Output ONLY a valid JSON object.
+    **OUTPUT FORMAT RULES:**
+    1. Output MUST be valid JSON with a 'rules' key.
+    2. 'left_param': The variable being constrained (e.g., 't_plate', 'Z_modulus', 'x_bulkhead').
+    3. 'condition': One of [ >=, <=, ==, >, < ].
+    4. 'right_param': The math formula. Use Python syntax (e.g., '0.05 * LBP', 'sqrt(T)').
+    5. 'category': Infer from context (e.g., 'Hull Structure', 'Piping', 'Safety').
     """
 
     user_prompt = f"""
-    Extract all measurable constraints from this text block:
+    Analyze this text from the IRClass Rulebook and extract all constraints.
 
-    "{chunk_text}"
-
-    Return JSON in this EXACT format:
+    **EXAMPLES OF HOW TO EXTRACT:**
+    
+    Text: "The collision bulkhead shall be located between 0.05L and 0.08L from the FP."
+    Output:
     {{
-        "rules": [
-            {{
-                "category": "string (e.g. Hull, Stability, Machinery, Safety, General)",
-                "parameter_name": "string (The subject of the rule, e.g., 'Collision Bulkhead Location')",
-                "left_param": "string (The variable being checked, e.g., 'distance_from_fp')",
-                "condition": "string (one of: '>=', '<=', '>', '<', '==', '!=')",
-                "right_param": "string (The value, including units or formula, e.g., '0.05 * LBP' or '8 mm')",
-                "description": "string (The original rule sentence from the text)"
-            }}
-        ]
+      "rules": [
+        {{ "parameter_name": "Collision Bulkhead Min Pos", "left_param": "x_col_bhd", "condition": ">=", "right_param": "0.05 * LBP", "description": "Min distance from FP", "category": "Hull" }},
+        {{ "parameter_name": "Collision Bulkhead Max Pos", "left_param": "x_col_bhd", "condition": "<=", "right_param": "0.08 * LBP", "description": "Max distance from FP", "category": "Hull" }}
+      ]
     }}
+
+    Text: "The thickness of the shell plating is not to be less than (0.04L + 5) mm."
+    Output:
+    {{
+      "rules": [
+        {{ "parameter_name": "Shell Plating Thickness", "left_param": "t_shell", "condition": ">=", "right_param": "0.04 * LBP + 5", "description": "Minimum shell plating thickness", "category": "Structure" }}
+      ]
+    }}
+
+    **TEXT TO ANALYZE:**
+    {chunk_text}
+
+    **RETURN JSON:**
     """
 
     payload = {
         "model": MODEL_NAME,
-        "temperature": 0.1,
+        "temperature": 0.0, # Zero temp for maximum precision
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -103,13 +109,18 @@ def extract_chunk_rules(client, chunk_text):
     if clean_text.endswith("```"): clean_text = clean_text[:-3]
     clean_text = clean_text.strip()
     
+    # Extract JSON block safely
     start = clean_text.find("{")
     end = clean_text.rfind("}")
     if start != -1 and end != -1:
         clean_text = clean_text[start:end+1]
 
-    data = json.loads(clean_text)
-    return data.get("rules", [])
+    try:
+        data = json.loads(clean_text)
+        return data.get("rules", [])
+    except json.JSONDecodeError:
+        print(f"   ⚠️ Chunk JSON Error. Raw: {clean_text[:50]}...")
+        return []
 
 # ==============================
 # MAIN EXTRACTION PIPELINE

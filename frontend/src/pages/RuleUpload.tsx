@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { Upload, FileText, CheckCircle, Loader2, Save, AlertCircle, Sparkles } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader2, Save, AlertCircle, Sparkles, Download } from "lucide-react";
 
 interface ExtractedRule {
   category: string;
-  parameter: string;
-  formula: string;
+  parameter_name: string;
+  left_param: string;
+  condition: string;
+  right_param: string;
   description: string;
 }
 
@@ -18,7 +20,7 @@ const RuleUpload: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
       setError("");
-      setRules([]); 
+      setRules([]);
     }
   };
 
@@ -35,7 +37,7 @@ const RuleUpload: React.FC = () => {
     try {
       const response = await fetch("http://127.0.0.1:5000/api/extraction/upload-rules", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }, // FormData sets Content-Type automatically
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
@@ -53,6 +55,22 @@ const RuleUpload: React.FC = () => {
     }
   };
 
+  // ✅ NEW: Function to Download JSON File
+  const handleDownload = () => {
+    if (rules.length === 0) return;
+
+    const jsonString = JSON.stringify({ rules: rules }, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "extracted_irclass_rules.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto">
@@ -65,14 +83,12 @@ const RuleUpload: React.FC = () => {
         {/* UPLOAD AREA */}
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 mb-8">
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-10 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors relative">
-            
             <input 
               type="file" 
               accept=".pdf" 
               onChange={handleFileChange}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
-            
             <div className="p-4 bg-blue-50 text-blue-600 rounded-full mb-4">
               <Upload size={32} />
             </div>
@@ -90,9 +106,9 @@ const RuleUpload: React.FC = () => {
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-all shadow-lg shadow-blue-200"
               >
                 {isProcessing ? (
-                  <><Loader2 className="animate-spin" /> Analyzing (Gemma 3)...</>
+                  <><Loader2 className="animate-spin" /> Processing with Parallel Threads...</>
                 ) : (
-                  <><Sparkles size={20} /> Extract with AI</>
+                  <><Sparkles size={20} /> Extract Rules with AI</>
                 )}
               </button>
             </div>
@@ -113,9 +129,20 @@ const RuleUpload: React.FC = () => {
                 <CheckCircle className="text-green-500" /> 
                 Extracted Constraints ({rules.length})
               </h3>
-              <button className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-sm">
-                <Save size={16} /> Save to Database
-              </button>
+              
+              <div className="flex gap-3">
+                {/* ✅ NEW: Download Button */}
+                <button 
+                  onClick={handleDownload}
+                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-200 flex items-center gap-2 border border-gray-300"
+                >
+                  <Download size={16} /> Download JSON
+                </button>
+
+                <button className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-sm">
+                  <Save size={16} /> Save to Database
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -124,7 +151,7 @@ const RuleUpload: React.FC = () => {
                   <tr>
                     <th className="p-4 w-1/6">Category</th>
                     <th className="p-4 w-1/4">Parameter</th>
-                    <th className="p-4 w-1/4">Formula / Value</th>
+                    <th className="p-4 w-1/4">Formula / Condition</th>
                     <th className="p-4 w-1/3">Context</th>
                   </tr>
                 </thead>
@@ -132,10 +159,10 @@ const RuleUpload: React.FC = () => {
                   {rules.map((rule, index) => (
                     <tr key={index} className="hover:bg-gray-50 transition-colors">
                       <td className="p-4 font-semibold text-gray-700 text-sm">{rule.category}</td>
-                      <td className="p-4 text-blue-600 font-medium text-sm">{rule.parameter}</td>
+                      <td className="p-4 text-blue-600 font-medium text-sm">{rule.parameter_name}</td>
                       <td className="p-4">
                         <code className="bg-gray-100 px-2 py-1 rounded text-red-600 font-mono text-xs border border-gray-200">
-                          {rule.formula}
+                          {rule.left_param} {rule.condition} {rule.right_param}
                         </code>
                       </td>
                       <td className="p-4 text-xs text-gray-500">{rule.description}</td>

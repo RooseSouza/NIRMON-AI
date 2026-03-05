@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import DatePicker from "react-datepicker"; // 1. Import DatePicker
-import "react-datepicker/dist/react-datepicker.css"; // 1. Import CSS
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+// 1. Import the zoom/pan library components
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
   ArrowLeft,
   Ship,
@@ -14,6 +16,13 @@ import {
   Lock,
   X,
   Save,
+  // 2. Import new icons for the viewer controls
+  Maximize,
+  Minimize,
+  ZoomIn,
+  ZoomOut,
+  RefreshCcw,
+  Move
 } from "lucide-react";
 
 const ProjectDetails: React.FC = () => {
@@ -31,15 +40,16 @@ const ProjectDetails: React.FC = () => {
   const [designPreview, setDesignPreview] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
-  // New State for Date Validation Error
   const [dateError, setDateError] = useState<string>("");
+  
+  // 3. New state for Fullscreen Toggle
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
       
       try {
-        // 1. Fetch Project Details (Existing)
         const projectRes = await fetch(`http://127.0.0.1:5000/api/projects/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -47,13 +57,11 @@ const ProjectDetails: React.FC = () => {
             setProject(await projectRes.json());
         }
 
-        // 2. Check GA Inputs (Existing)
         const gaRes = await fetch(`http://127.0.0.1:5000/api/gainputs/project/${id}/latest`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         setHasGaInput(gaRes.ok);
 
-        // 3. FETCH DESIGN PREVIEW (New)
         if (gaRes.ok) {
             setPreviewLoading(true);
             const previewRes = await fetch(`http://127.0.0.1:5000/api/generation/preview/${id}`, {
@@ -87,25 +95,21 @@ const ProjectDetails: React.FC = () => {
         client_name: project.client_name,
         shipyard_name: project.shipyard_name,
         project_status: project.project_status,
-        // Ensure dates are strings YYYY-MM-DD
         start_date: project.start_date?.split("T")[0],
         target_delivery_date: project.target_delivery_date?.split("T")[0],
       });
     }
   }, [project]);
 
-  // Helper to safely parse string to Date object for DatePicker
   const parseDate = (dateStr: string) => {
     return dateStr ? new Date(dateStr) : null;
   };
 
-  // Helper to format Date object to YYYY-MM-DD for State/API
   const formatDateForApi = (date: Date | null) => {
     return date ? date.toISOString().split("T")[0] : "";
   };
 
   const handleUpdateProject = async () => {
-    // 2. Final Validation Check before API Call
     if (editData.start_date && editData.target_delivery_date) {
       if (
         new Date(editData.target_delivery_date) <= new Date(editData.start_date)
@@ -131,7 +135,7 @@ const ProjectDetails: React.FC = () => {
       if (response.ok) {
         setProject({ ...project, ...editData });
         setIsEditing(false);
-        setDateError(""); // Clear errors
+        setDateError("");
       } else {
         console.error("Failed to update");
       }
@@ -155,39 +159,25 @@ const ProjectDetails: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
-        return "text-green-600";
-      case "Draft":
-        return "text-gray-500";
-      case "Under Review":
-        return "text-yellow-600";
-      case "Approved":
-        return "text-blue-600";
-      case "Completed":
-        return "text-purple-600";
-      case "Cancelled":
-        return "text-red-600";
-      default:
-        return "text-gray-600";
+      case "Active": return "text-green-600";
+      case "Draft": return "text-gray-500";
+      case "Under Review": return "text-yellow-600";
+      case "Approved": return "text-blue-600";
+      case "Completed": return "text-purple-600";
+      case "Cancelled": return "text-red-600";
+      default: return "text-gray-600";
     }
   };
 
   const getStatusDotColor = (status: string) => {
     switch (status) {
-      case "Active":
-        return "bg-green-500";
-      case "Draft":
-        return "bg-gray-400";
-      case "Under Review":
-        return "bg-yellow-500";
-      case "Approved":
-        return "bg-blue-500";
-      case "Completed":
-        return "bg-purple-500";
-      case "Cancelled":
-        return "bg-red-500";
-      default:
-        return "bg-gray-400";
+      case "Active": return "bg-green-500";
+      case "Draft": return "bg-gray-400";
+      case "Under Review": return "bg-yellow-500";
+      case "Approved": return "bg-blue-500";
+      case "Completed": return "bg-purple-500";
+      case "Cancelled": return "bg-red-500";
+      default: return "bg-gray-400";
     }
   };
 
@@ -206,163 +196,184 @@ const ProjectDetails: React.FC = () => {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
-      <button
-        onClick={() => navigate("/projects")}
-        className="flex items-center gap-2 mb-6 text-gray-500 hover:text-blue-600 font-bold transition-colors"
-      >
-        <ArrowLeft size={20} /> BACK TO PROJECTS
-      </button>
+      {!isFullscreen && (
+        <button
+          onClick={() => navigate("/projects")}
+          className="flex items-center gap-2 mb-6 text-gray-500 hover:text-blue-600 font-bold transition-colors"
+        >
+          <ArrowLeft size={20} /> BACK TO PROJECTS
+        </button>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 relative">
-          <button
-            onClick={() => setIsEditing(true)}
-            className="absolute top-6 right-6 p-2 rounded-lg hover:bg-gray-100 transition"
-          >
-            <Edit size={16} className="text-gray-500" />
-          </button>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Ship className="text-blue-600" size={24} />
-            </div>
-            <h2 className="text-xl font-bold text-gray-800">
-              Project Information
-            </h2>
-          </div>
-
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  Project Name
-                </label>
-                <p className="text-lg font-bold text-gray-900 leading-tight">
-                  {project.project_name}
-                </p>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  Vessel Type
-                </label>
-                <p className="text-sm font-semibold text-gray-800">
-                  {project.vessel?.vessel_type?.type_name || "Not Defined"}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  Code
-                </label>
-                <p className="font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm">
-                  {project.project_code}
-                </p>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  Status
-                </label>
-                <p
-                  className={`font-semibold flex items-center gap-1 text-sm ${getStatusColor(project.project_status)}`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(project.project_status)}`}
-                  ></span>
-                  {project.project_status}
-                </p>
-              </div>
-            </div>
-            <div className="border-t pt-4 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-start gap-3">
-                  <User size={16} className="text-gray-400 mt-1" />
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase">
-                      Client
-                    </label>
-                    <p className="text-sm font-medium">
-                      {project.client_name || "Internal"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Anchor size={16} className="text-gray-400 mt-1" />
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase">
-                      Shipyard
-                    </label>
-                    <p className="text-sm font-medium">
-                      {project.shipyard_name || "Not Assigned"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-start gap-3">
-                  <Calendar size={16} className="text-gray-400 mt-1" />
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase">
-                      Start Date
-                    </label>
-                    <p className="text-sm font-medium">
-                      {formatDateDisplay(project.start_date)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Calendar size={16} className="text-gray-400 mt-1" />
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase">
-                      Target Delivery
-                    </label>
-                    <p className="text-sm font-medium">
-                      {formatDateDisplay(project.target_delivery_date)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative group w-full mt-10">
-            {isUnderReview && (
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-max px-3 py-2 bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                Project is Under Review. Editing disabled.
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            )}
+      <div className={`grid grid-cols-1 ${isFullscreen ? "block" : "md:grid-cols-3 gap-8"}`}>
+        
+        {/* Left Side: Project Info (Hidden when fullscreen) */}
+        {!isFullscreen && (
+          <div className="md:col-span-1 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 relative">
             <button
-              onClick={() =>
-                !isUnderReview && navigate(`/projects/${id}/input`)
-              }
-              disabled={isUnderReview}
-              className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isUnderReview ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200" : "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"}`}
+              onClick={() => setIsEditing(true)}
+              className="absolute top-6 right-6 p-2 rounded-lg hover:bg-gray-100 transition"
             >
-              {isUnderReview ? (
-                <>
-                  <Lock size={20} /> Locked for Review
-                </>
-              ) : hasGaInput ? (
-                <>
-                  <Edit size={20} /> Edit Parameters
-                </>
-              ) : (
-                <>
-                  <Plus size={20} /> Add Parameters
-                </>
+              <Edit size={16} className="text-gray-500" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Ship className="text-blue-600" size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800">
+                Project Information
+              </h2>
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Project Name
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 leading-tight">
+                    {project.project_name}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Vessel Type
+                  </label>
+                  <p className="text-sm font-semibold text-gray-800">
+                    {project.vessel?.vessel_type?.type_name || "Not Defined"}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Code
+                  </label>
+                  <p className="font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm">
+                    {project.project_code}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Status
+                  </label>
+                  <p
+                    className={`font-semibold flex items-center gap-1 text-sm ${getStatusColor(project.project_status)}`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(project.project_status)}`}
+                    ></span>
+                    {project.project_status}
+                  </p>
+                </div>
+              </div>
+              <div className="border-t pt-4 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3">
+                    <User size={16} className="text-gray-400 mt-1" />
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase">
+                        Client
+                      </label>
+                      <p className="text-sm font-medium">
+                        {project.client_name || "Internal"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Anchor size={16} className="text-gray-400 mt-1" />
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase">
+                        Shipyard
+                      </label>
+                      <p className="text-sm font-medium">
+                        {project.shipyard_name || "Not Assigned"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3">
+                    <Calendar size={16} className="text-gray-400 mt-1" />
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase">
+                        Start Date
+                      </label>
+                      <p className="text-sm font-medium">
+                        {formatDateDisplay(project.start_date)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Calendar size={16} className="text-gray-400 mt-1" />
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase">
+                        Target Delivery
+                      </label>
+                      <p className="text-sm font-medium">
+                        {formatDateDisplay(project.target_delivery_date)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative group w-full mt-10">
+              {isUnderReview && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-max px-3 py-2 bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                  Project is Under Review. Editing disabled.
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-800"></div>
+                </div>
               )}
+              <button
+                onClick={() =>
+                  !isUnderReview && navigate(`/projects/${id}/input`)
+                }
+                disabled={isUnderReview}
+                className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isUnderReview ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200" : "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"}`}
+              >
+                {isUnderReview ? (
+                  <>
+                    <Lock size={20} /> Locked for Review
+                  </>
+                ) : hasGaInput ? (
+                  <>
+                    <Edit size={20} /> Edit Parameters
+                  </>
+                ) : (
+                  <>
+                    <Plus size={20} /> Add Parameters
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Right Side: GA Model Viewer (Expands to full screen if toggled) */}
+        <div 
+          className={isFullscreen 
+            ? "fixed inset-0 z-50 bg-gray-100 p-6 flex flex-col" 
+            : "md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col"
+          }
+        >
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">General Arrangement Preview</h3>
+              {designPreview && <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded font-mono border border-green-200">DXF Generated</span>}
+            </div>
+            
+            {/* Fullscreen Toggle Button */}
+            <button 
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-2 hover:bg-gray-100 text-gray-500 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold"
+            >
+              {isFullscreen ? <><Minimize size={18}/> Exit Fullscreen</> : <><Maximize size={18}/> Fullscreen</>}
             </button>
           </div>
-        </div>
 
-        {/* Right Side: GA Model Viewer */}
-        <div className="md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">General Arrangement Preview</h3>
-             {designPreview && <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded font-mono">DXF Generated</span>}
-          </div>
-
-          <div className="flex-1 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative min-h-[400px]">
+          <div className={`flex-1 bg-white rounded-xl border border-gray-300 flex items-center justify-center overflow-hidden relative ${isFullscreen ? "h-full" : "min-h-[500px]"}`}>
             
             {previewLoading ? (
                 <div className="flex flex-col items-center text-blue-600">
@@ -370,13 +381,41 @@ const ProjectDetails: React.FC = () => {
                     <span className="text-sm font-medium">Loading Blueprint...</span>
                 </div>
             ) : designPreview ? (
-                // ✅ Render the SVG safely
-                <div 
-                  className="w-full h-full p-4 [&>svg]:w-full [&>svg]:h-full"
-                  dangerouslySetInnerHTML={{ __html: designPreview }} 
-                />
+                
+                // 4. TransformWrapper enables Zoom and Pan
+                <TransformWrapper 
+                  initialScale={1} 
+                  minScale={0.5} 
+                  maxScale={10} 
+                  centerOnInit={true}
+                  wheel={{ step: 0.1 }} // Smooth scrolling
+                >
+                  {({ zoomIn, zoomOut, resetTransform }) => (
+                    <>
+                      {/* Floating Control Toolbar */}
+                      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 bg-white p-1 rounded-lg shadow-md border border-gray-200">
+                        <button onClick={() => zoomIn()} className="p-2 hover:bg-gray-100 rounded text-gray-700 transition" title="Zoom In"><ZoomIn size={20} /></button>
+                        <button onClick={() => zoomOut()} className="p-2 hover:bg-gray-100 rounded text-gray-700 transition" title="Zoom Out"><ZoomOut size={20} /></button>
+                        <div className="h-px bg-gray-200 my-1"></div>
+                        <button onClick={() => resetTransform()} className="p-2 hover:bg-gray-100 rounded text-gray-700 transition" title="Reset View"><RefreshCcw size={20} /></button>
+                      </div>
+
+                      {/* Floating instructions */}
+                      <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-white/80 backdrop-blur px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm text-xs font-semibold text-gray-500 pointer-events-none">
+                        <Move size={14} /> Scroll to Zoom, Drag to Move
+                      </div>
+
+                      <TransformComponent wrapperClass="w-full h-full cursor-grab active:cursor-grabbing" contentClass="w-full h-full flex items-center justify-center">
+                        <div 
+                          className="w-full h-full p-4 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-h-full [&>svg]:max-w-full"
+                          dangerouslySetInnerHTML={{ __html: designPreview }} 
+                        />
+                      </TransformComponent>
+                    </>
+                  )}
+                </TransformWrapper>
+
             ) : (
-                // Placeholder if no design exists
                 <div className="text-center text-gray-400">
                     <Ship className="w-16 h-16 mx-auto mb-4 text-gray-200" />
                     <p className="font-semibold">No Design Generated Yet</p>
@@ -387,9 +426,9 @@ const ProjectDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* EDIT MODAL */}
+      {/* EDIT MODAL REMAINS UNCHANGED */}
       {isEditing && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
           <div className="bg-white w-full max-w-xl p-8 rounded-2xl shadow-2xl border border-gray-100 relative animate-in fade-in zoom-in duration-200">
             <h2 className="text-xl font-bold mb-6 text-gray-800">
               Edit Project
@@ -489,7 +528,6 @@ const ProjectDetails: React.FC = () => {
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                     Start Date
                   </label>
-                  {/* 3. React Date Picker for Start Date */}
                   <DatePicker
                     selected={parseDate(editData.start_date)}
                     onChange={(date: Date | null) => {
@@ -497,7 +535,6 @@ const ProjectDetails: React.FC = () => {
                         ...editData,
                         start_date: formatDateForApi(date),
                       });
-                      // Optional: Reset error if user fixes start date
                       setDateError("");
                     }}
                     dateFormat="dd/MM/yyyy"
@@ -510,7 +547,6 @@ const ProjectDetails: React.FC = () => {
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                     Target Delivery
                   </label>
-                  {/* 4. React Date Picker for Target Date with Validation */}
                   <DatePicker
                     selected={parseDate(editData.target_delivery_date)}
                     onChange={(date: Date | null) => {
@@ -518,17 +554,16 @@ const ProjectDetails: React.FC = () => {
                         ...editData,
                         target_delivery_date: formatDateForApi(date),
                       });
-                      setDateError(""); // Clear error on change
+                      setDateError(""); 
                     }}
                     dateFormat="dd/MM/yyyy"
                     className={`w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-700 ${dateError ? "border-red-500 bg-red-50" : "border-gray-300"}`}
                     placeholderText="Select Target Date"
-                    minDate={parseDate(editData.start_date) || new Date()} // 5. Prevent selecting dates before Start Date
+                    minDate={parseDate(editData.start_date) || new Date()} 
                   />
                 </div>
               </div>
 
-              {/* 6. Visual Error Message */}
               {dateError && (
                 <p className="text-red-500 text-xs font-semibold">
                   {dateError}
